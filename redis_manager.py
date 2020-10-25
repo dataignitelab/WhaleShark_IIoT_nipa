@@ -20,16 +20,17 @@ docker run -it --link whaleshark-redis:redis --rm redis redis-cli -h redis -p 63
 class RedisMgr:
 
     def __init__(self):
+        self.redis_con = None
+        self.host = None
+        self.port = None
         with open('config/config_server_develop.yaml', 'r') as file:
             config_obj = yaml.load(file, Loader=yaml.FullLoader)
-            host = config_obj['iiot_server']['redis_server']['ip_address']
-            port = config_obj['iiot_server']['redis_server']['port']
+            self.host = config_obj['iiot_server']['redis_server']['ip_address']
+            self.host = config_obj['iiot_server']['redis_server']['port']
 
-        if host and port :
-            self.redis_con = self.connect(host, port)
+        if self.host != None and self.port != None:
+            self.redis_con = self.connect(self.host, self.port)
             self.config_equip_desc()
-            self.host = host
-            self.port = port
 
     def connect(self, host, port):
         redis_obj = None
