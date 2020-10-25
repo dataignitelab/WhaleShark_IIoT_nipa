@@ -1,11 +1,11 @@
 import asyncio
 import socket
 import logging
-import redis
 import yaml
 import sys
 import json
 import pika
+from redis_manager import RedisMgr
 from net_socket.iiot_tcp_async_server import AsyncServer
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',stream=sys.stdout, level=logging.DEBUG, datefmt='%Y-%m-%d %H:%M:%S')
@@ -17,8 +17,8 @@ influxdb
 step1 : docker pull influxdb
 step2 :
 docker run -p 8086:8086 -v $PROJECT_PATH/WhaleShark_IIoT/config:/var/lib/influxdb \
-influxdb -config /var/lib/influxdb/influxdb.conf \
--e INFLUXDB_ADMIN_USER=whaleshark -e INFLUXDB_ADMIN_PASSWORD=whaleshark
+-e INFLUXDB_ADMIN_USER=whaleshark -e INFLUXDB_ADMIN_PASSWORD=whaleshark\
+influxdb -config /var/lib/influxdb/influxdb.conf
 Please refer https://www.open-plant.com/knowledge-base/how-to-install-influxdb-docker-for-windows-10/
 
 Get connector for redis
@@ -28,7 +28,6 @@ shell
 docker pull redis
 docker run --name whaleshark-redis -d -p 6379:6379 redis
 docker run -it --link whaleshark-redis:redis --rm redis redis-cli -h redis -p 6379
-
 
 If you don't have rabbitmq, you can use docker.
 docker run -d --hostname whaleshark --name whaleshark-rabbit -p 5672:5672 \
@@ -46,9 +45,6 @@ class TcpServer:
             self.tcp_host = config_obj['iiot_server']['tcp_server']['ip_address']
             self.tcp_port = config_obj['iiot_server']['tcp_server']['port']
 
-            self.redis_host = config_obj['iiot_server']['redis_server']['ip_address']
-            self.redis_port = config_obj['iiot_server']['redis_server']['port']
-
             self.rabbitmq_host = config_obj['iiot_server']['rabbit_mq']['ip_address']
             self.rabbitmq_port = config_obj['iiot_server']['rabbit_mq']['port']
 
@@ -57,57 +53,6 @@ class TcpServer:
 
             self.exchange = config_obj['iiot_server']['rabbit_mq']['exchange']
             self.exchange_type = config_obj['iiot_server']['rabbit_mq']['exchange_type']
-
-    def connect_redis(self, host, port):
-        '''
-        :param host: redis access host ip
-        :param port: redis access port
-        :return: redis connector
-        '''
-        redis_obj = None
-        try:
-            conn_params = {
-                "host": host,
-                "port": port,
-            }
-            redis_obj = redis.StrictRedis(**conn_params)
-
-        except Exception as e:
-            logging.error(str(e))
-
-        return redis_obj
-
-    def config_equip_desc(self, address, port):
-        '''
-        Configure redis for equipment sensor desc(sensor_cd)
-        key : const sensor_cd
-        value : dictionary or map has sensor_cd:sensor description
-        :return: redis connector
-        '''
-        redis_con = None
-        try:
-            redis_con = self.connect_redis(address, port)
-            facilities_dict = redis_con.get('facilities_info')
-            if facilities_dict is None:
-                facilities_dict = {'TS0001': {
-                    '0001': 'TS_VOLT1_(RS)',
-                    '0002': 'TS_VOLT1_(ST)',
-                    '0003': 'TS_VOLT1_(RT)',
-                    '0004': 'TS_AMP1_(R)',
-                    '0005': 'TS_AMP1_(S)',
-                    '0006': 'TS_AMP1_(T)',
-                    '0007': 'INNER_PRESS',
-                    '0008': 'PUMP_PRESS',
-                    '0009': 'TEMPERATURE1(PV)',
-                    '0010': 'TEMPERATURE1(SV)',
-                    '0011': 'OVER_TEMP'}
-                }
-                redis_con.set('facilities_info', json.dumps(facilities_dict))
-
-        except Exception as e:
-            logging.error(str(e))
-
-        return redis_con
 
     def get_messagequeue(self, address, port):
         '''
@@ -129,7 +74,7 @@ class TcpServer:
         return channel
 
     def init_config(self):
-        self.redis_con = self.config_equip_desc(address=self.redis_host, port=self.redis_port)
+        self.redis_con = RedisMgr().get_conn()
         if self.redis_con is None:
             logging.error('redis configuration fail')
             sys.exit()
@@ -159,6 +104,7 @@ if __name__ == '__main__':
     try:
         server = TcpServer()
         server.init_config()
+
         redis_mgr = server.get_redis_con()
         rabbit_channel = server.get_mq_channel()
         server_socket = server.get_server_socket()
