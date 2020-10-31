@@ -1,26 +1,29 @@
 import logging
 import yaml
 import json
-import pika
 import sys
-import redis
 from influxdb import InfluxDBClient
 import time
 import mongo_manager
+
+from redis_manager import RedisMgr
+from rabbit_mq_manager import RabbitMQMgr
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
                     stream=sys.stdout, level=logging.DEBUG, datefmt='%Y-%m-%d %H:%M:%S')
 logging.getLogger("pika").propagate = False
 
+"""
+If you don't have rabbitmq, you can use docker.
+docker run -d --hostname whaleshark --name whaleshark-rabbit \
+-p 5672:5672 -p 8080:15672 -e RABBITMQ_DEFAULT_USER=whaleshark \
+-e RABBITMQ_DEFAULT_PASS=whaleshark rabbitmq:3-management
+"""
+
 class Agent:
     def __init__(self):
         with open('config/config_server_develop.yaml', 'r') as file:
             config_obj = yaml.load(file, Loader=yaml.FullLoader)
-            self.rabbitmq_host = config_obj['iiot_server']['rabbit_mq']['ip_address']
-            self.rabbitmq_port = config_obj['iiot_server']['rabbit_mq']['port']
-       
-            self.redis_host = config_obj['iiot_server']['redis_server']['ip_address']
-            self.redis_port = config_obj['iiot_server']['redis_server']['port']
         
             self.influx_host = config_obj['iiot_server']['influxdb']['ip_address']
             self.influx_port = config_obj['iiot_server']['influxdb']['port']
@@ -30,32 +33,6 @@ class Agent:
             self.influx_db = config_obj['iiot_server']['influxdb']['db']
 
         self.mongo_mgr = mongo_manager.MongoMgr()
-    
-    def connect_redis(self, host, port):
-        """
-        Get connector for redis
-        If you don't have redis, you can use redis on docker with follow steps.
-        Getting most recent redis image
-        shell: docker pull redis
-
-        docker pull redis
-        docker run --name whaleshark-redis -d -p 6379:6379 redis
-        docker run -it --link whaleshark-redis:redis --rm redis redis-cli -h redis -p 6379
-
-        :param host: redis access host ip
-        :param port: redis access port
-        :return: redis connector
-        """
-        redis_obj = None
-        try:
-            conn_params = {
-                "host": host,
-                "port": port,
-            }
-            redis_obj = redis.StrictRedis(**conn_params)
-        except Exception as exp:
-            logging.error(str(exp))
-        return redis_obj
 
     def get_influxdb(self, host, port, name, pwd, db):
         """
@@ -73,36 +50,12 @@ class Agent:
             logging.error(str(exp))
         return client
 
-    def get_messagequeue(self, address, port):
-        """
-        If you don't have rabbitmq, you can use docker.
-        docker run -d --hostname whaleshark --name whaleshark-rabbit \
-        -p 5672:5672 -p 8080:15672 -e RABBITMQ_DEFAULT_USER=whaleshark \
-        -e RABBITMQ_DEFAULT_PASS=whaleshark rabbitmq:3-management
-
-        get message queue connector (rabbit mq) with address, port
-        :param address: rabbit mq server ip
-        :param port: rabbitmq server port(AMQP)
-        :return: rabbitmq connection channel
-        """
-        channel = None
-        try:
-            credentials = pika.PlainCredentials('whaleshark', 'whaleshark')
-            param = pika.ConnectionParameters(address, port, '/', credentials)
-            connection = pika.BlockingConnection(param)
-            channel = connection.channel()
-    
-        except Exception as exp:
-            logging.exception(str(exp))
-    
-        return channel
-
     def callback_mqreceive(self, ch, method, properties, body):
         body = body.decode('utf-8')
         facility_msg_json = json.loads(body)
         table_name = list(facility_msg_json.keys())[0]
         fields = {}
-        tags = {}
+        # tags = {}
         logging.debug('mqtt body:' + str(facility_msg_json))
         me_timestamp = time.time()
         for key in facility_msg_json[table_name].keys():
@@ -128,53 +81,37 @@ class Agent:
                 logging.debug('influx write faile:' + str(influx_json))
         except Exception as exp:
             print(str(exp))
-
-    def config_facility_desc(self, redis_con):
-        facilities_dict = redis_con.get('facilities_info')
-        if facilities_dict is None:
-            facilities_dict = {'TS0001': {
-                '0001': 'TS_VOLT1_(RS)',
-                '0002': 'TS_VOLT1_(ST)',
-                '0003': 'TS_VOLT1_(RT)',
-                '0004': 'TS_AMP1_(R)',
-                '0005': 'TS_AMP1_(S)',
-                '0006': 'TS_AMP1_(T)',
-                '0007': 'INNER_PRESS',
-                '0008': 'PUMP_PRESS',
-                '0009': 'TEMPERATURE1(PV)',
-                '0010': 'TEMPERATURE1(SV)',
-                '0011': 'OVER_TEMP'}
-            }
-            redis_con.set('facilities_info', json.dumps(facilities_dict))
             
     def resource_config(self):
         self.influxdb_mgr = self.get_influxdb(host=self.influx_host, port=self.influx_port, name=self.influx_id, pwd=self.influx_pwd, db=self.influx_db)
         if self.influxdb_mgr is None:
             logging.error('influxdb configuration fail')
 
-        self.mq_channel = self.get_messagequeue(address=self.rabbitmq_host, port=self.rabbitmq_port)
-        if self.mq_channel is None:
-                logging.error('rabbitmq configuration fail')
+        self.mq_mgr = RabbitMQMgr()
+        if self.mq_mgr.connect() is None:
+            logging.error('rabbitmq configuration fail')
             
-        self.redis_mgr = self.connect_redis(self.redis_host, self.redis_port)
+        self.redis_mgr = RedisMgr()
+        if self.redis_mgr.connect() is None:
+            logging.error('redis configuration fail')
     
     def get_influxdb_mgr(self):
         return self.influxdb_mgr
     
     def syncmessage(self):
-        self.config_facility_desc(self.redis_mgr)
+        self.redis_mgr.config_equip_desc()
         facilities_dict = json.loads(self.redis_mgr.get('facilities_info'))
         for facility_id in facilities_dict.keys():
-            result = self.mq_channel.queue_declare(queue=facility_id, exclusive=True)
+            result = self.mq_mgr.get_channel().queue_declare(queue=facility_id, exclusive=True)
             tx_queue = result.method.queue
-            self.mq_channel.queue_bind(exchange='facility', queue=tx_queue)
-            call_back_arg = {'measurement': tx_queue}
+            self.mq_mgr.get_channel().queue_bind(exchange='facility', queue=tx_queue)
+            # call_back_arg = {'measurement': tx_queue}
             try:
-                self.mq_channel.basic_consume(tx_queue, on_message_callback=self.callback_mqreceive)
+                self.mq_mgr.get_channel().basic_consume(tx_queue, on_message_callback=self.callback_mqreceive)
             except Exception as exp:
                 logging.error(str(exp))
 
-        self.mq_channel.start_consuming()
+        self.mq_mgr.get_channel().start_consuming()
         
 if __name__ == '__main__':
     mqtt_agent = Agent()

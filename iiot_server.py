@@ -4,8 +4,8 @@ import logging
 import yaml
 import sys
 import json
-import pika
 from redis_manager import RedisMgr
+from rabbit_mq_manager import RabbitMQMgr
 from net_socket.iiot_tcp_async_server import AsyncServer
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',stream=sys.stdout, level=logging.DEBUG, datefmt='%Y-%m-%d %H:%M:%S')
@@ -45,50 +45,23 @@ class TcpServer:
             self.tcp_host = config_obj['iiot_server']['tcp_server']['ip_address']
             self.tcp_port = config_obj['iiot_server']['tcp_server']['port']
 
-            self.rabbitmq_host = config_obj['iiot_server']['rabbit_mq']['ip_address']
-            self.rabbitmq_port = config_obj['iiot_server']['rabbit_mq']['port']
-
-            self.rabbitmq_id = config_obj['iiot_server']['rabbit_mq']['id']
-            self.rabbitmq_pwd = config_obj['iiot_server']['rabbit_mq']['pwd']
-
-            self.exchange = config_obj['iiot_server']['rabbit_mq']['exchange']
-            self.exchange_type = config_obj['iiot_server']['rabbit_mq']['exchange_type']
-
-    def get_messagequeue(self, address, port):
-        '''
-        get message queue connector (rabbit mq) with address, port
-        :param address: rabbit mq server ip
-        :param port: rabbitmq server port(AMQP)
-        :return: rabbitmq connection channel
-        '''
-        channel = None
-        try:
-            credentials = pika.PlainCredentials(self.rabbitmq_id, self.rabbitmq_pwd)
-            param = pika.ConnectionParameters(address, port, '/', credentials)
-            connection = pika.BlockingConnection(param)
-            channel = connection.channel()
-            channel.exchange_declare(exchange='facility', exchange_type='fanout')
-        except Exception as e:
-            logging.exception(str(e))
-
-        return channel
-
     def init_config(self):
-        self.redis_con = RedisMgr().get_conn()
-        if self.redis_con is None:
+        self.redis_mgr = RedisMgr()
+        if self.redis_mgr.connect() is None:
             logging.error('redis configuration fail')
             sys.exit()
+        self.redis_mgr.config_equip_desc()
 
-        self.mq_channel = self.get_messagequeue(address=self.rabbitmq_host, port=self.rabbitmq_port)
-        if self.mq_channel is None:
+        self.mq_mgr = RabbitMQMgr()
+        if self.mq_mgr.connect() is None:
             logging.error('rabbitmq configuration fail')
             sys.exit()
 
-    def get_redis_con(self):
-        return self.redis_con
+    def get_redis_conn(self):
+        return self.redis_mgr.get_conn()
 
     def get_mq_channel(self):
-        return self.mq_channel
+        return self.mq_mgr.get_channel()
 
     def get_server_socket(self):
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -96,7 +69,7 @@ class TcpServer:
         server_socket.bind(('', self.tcp_port))
         server_socket.listen(1)
         logging.debug('IIoT Client Ready ({ip}:{port})'.format(ip=self.tcp_host, port=self.tcp_port))
-        self.redis_con.set('remote_log:iit_server_boot',json.dumps({'ip':self.tcp_host,'port':self.tcp_port, 'status':1}))
+        self.redis_mgr.set('remote_log:iit_server_boot',json.dumps({'ip':self.tcp_host,'port':self.tcp_port, 'status':1}))
         return server_socket
 
 
@@ -105,7 +78,7 @@ if __name__ == '__main__':
         server = TcpServer()
         server.init_config()
 
-        redis_mgr = server.get_redis_con()
+        redis_mgr = server.get_redis_conn()
         rabbit_channel = server.get_mq_channel()
         server_socket = server.get_server_socket()
         msg_size = 27

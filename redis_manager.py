@@ -28,26 +28,35 @@ class RedisMgr:
             self.host = config_obj['iiot_server']['redis_server']['ip_address']
             self.port = config_obj['iiot_server']['redis_server']['port']
 
-        if self.host != None and self.port != None:
-            self.redis_con = self.connect(self.host, self.port)
-            self.config_equip_desc()
+    def connect(self):
+        """
+        Get connector for redis
+        If you don't have redis, you can use redis on docker with follow steps.
+        Getting most recent redis image
+        shell: docker pull redis
 
-    def connect(self, host, port):
-        redis_obj = None
+        docker pull redis
+        docker run --name whaleshark-redis -d -p 6379:6379 redis
+        docker run -it --link whaleshark-redis:redis --rm redis redis-cli -h redis -p 6379
+
+        :param host: redis access host ip
+        :param port: redis access port
+        :return: redis connector
+        """
+
         try:
             conn_params = {
-                "host": host,
-                "port": port,
+                "host": self.host,
+                "port": self.port,
             }
-            redis_obj = redis.StrictRedis(**conn_params)
-
+            self.redis_conn = redis.StrictRedis(**conn_params)
         except Exception as e:
             logging.error(str(e))
 
-        return redis_obj
+        return self.redis_conn
 
     def get_conn(self):
-        return self.redis_con
+        return self.redis_conn
 
     def config_equip_desc(self):
         '''
@@ -56,10 +65,10 @@ class RedisMgr:
         value : dictionary or map has sensor_cd:sensor description
         :return: redis connector
         '''
-        # self.redis_con = None
+        # self.redis_conn = None
         try:
-            # redis_con = self.connect_redis(address, port)
-            facilities_dict = self.redis_con.get('facilities_info')
+            # redis_conn = self.connect_redis(address, port)
+            facilities_dict = self.redis_conn.get('facilities_info')
             if facilities_dict is None:
                 facilities_dict = {'TS0001': {
                     '0001': 'TS_VOLT1_(RS)',
@@ -74,10 +83,31 @@ class RedisMgr:
                     '0010': 'TEMPERATURE1(SV)',
                     '0011': 'OVER_TEMP'}
                 }
-                self.redis_con.set('facilities_info', json.dumps(facilities_dict))
+                self.redis_conn.set('facilities_info', json.dumps(facilities_dict))
 
         except Exception as e:
             logging.error(str(e))
 
-        return self.redis_con
+        return self.redis_conn
+
+    def set(self, key, value):
+        ret = False
+        try:
+            if type(value) is dict:
+                value = json.dumps(value)
+            self.redis_conn.set(key, value)
+            ret = True
+        except Exception as e:
+            logging.error(str(e))
+        return ret
+
+    def get(self, key):
+        ret = None
+        try:
+            ret = self.redis_conn.get(key)
+        except Exception as e:
+            logging.error(str(e))
+        return ret
+        
+
     
