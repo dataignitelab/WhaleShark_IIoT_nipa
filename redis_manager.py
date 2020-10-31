@@ -26,7 +26,7 @@ class RedisMgr:
         with open('config/config_server_develop.yaml', 'r') as file:
             config_obj = yaml.load(file, Loader=yaml.FullLoader)
             self.host = config_obj['iiot_server']['redis_server']['ip_address']
-            self.host = config_obj['iiot_server']['redis_server']['port']
+            self.port = config_obj['iiot_server']['redis_server']['port']
 
         if self.host != None and self.port != None:
             self.redis_con = self.connect(self.host, self.port)
