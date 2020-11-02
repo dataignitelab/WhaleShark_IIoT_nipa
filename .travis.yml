@@ -1,0 +1,17 @@
+sudo: required
+language: python
+python:
+  - "3.8"
+# command to install dependencies
+install: "pip install -r requirements.txt"
+# command to run tests
+script: pytest whalesharkiiot_unit_test.py
+services:
+  - mongodb
+  - redis-server
+  - rabbitmq
+
+before_script:
+  - sleep 15
+  - mongo facility --eval 'db.createUser({user:"whaleshark",pwd:"whaleshark",roles:["readWrite"]});'
+

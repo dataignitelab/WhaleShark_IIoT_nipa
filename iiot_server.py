@@ -28,11 +28,15 @@ shell
 docker pull redis
 docker run --name whaleshark-redis -d -p 6379:6379 redis
 docker run -it --link whaleshark-redis:redis --rm redis redis-cli -h redis -p 6379
-
+if container is exist
+ docker restart  whaleshark-redis
+ 
 If you don't have rabbitmq, you can use docker.
 docker run -d --hostname whaleshark --name whaleshark-rabbit -p 5672:5672 \
 -p 8080:15672 -e RABBITMQ_DEFAULT_USER=whaleshark -e \
 RABBITMQ_DEFAULT_PASS=whaleshark rabbitmq:3-management
+if container is exist
+ docker restart  whaleshark-rabbit
         
 """
 

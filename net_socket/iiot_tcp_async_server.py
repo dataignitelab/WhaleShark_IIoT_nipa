@@ -121,8 +121,8 @@ class AsyncServer:
                 param = pika.ConnectionParameters('localhost', 5672, '/', credentials)
                 connection = pika.BlockingConnection(param)
                 mqtt_con = connection.channel()
-                mqtt_con.queue_declare(queue='facility')
-                mqtt_con.exchange_declare(exchange=exchange_name, exchange_type='fanout')
+                mqtt_con.queue_declare(queue=exchange_name)
+                mqtt_con.exchange_declare(exchange='facility', exchange_type='fanout')
             
             mqtt_con.basic_publish(exchange=exchange_name, routing_key=routing_key, body=json_body)
             return mqtt_con, json.loads(json_body)
@@ -131,7 +131,7 @@ class AsyncServer:
             logging.exception(str(e))
             return {'Status': str(e)}
     
-    def convert_hex2decimal(self, packet_bytes, host, port):
+    def convert_hex2decimal(self, packet_bytes, host, port, mqtt_valid=True):
         """
         In the packet, the hexadecimal value is converted to a decimal value, structured in json format, and returned.
 
@@ -179,7 +179,8 @@ class AsyncServer:
                 collection = group + group_code
                 doc_key = '%s-%s-%s' % (pub_time.year, pub_time.month, pub_time.day)
                 pub_time = str(pub_time).replace('.', 'ms')
-                self.mongo_mgr.document_upsert(mongo_db_name, collection, doc_key, pub_time)
+                if mqtt_valid == True:
+                    self.mongo_mgr.document_upsert(mongo_db_name, collection, doc_key, pub_time)
                 modbus_dict = {'equipment_id': group + group_code, 'meta': {'ip': host,
                                                                             'port': port,
                                                                             'ms_time': ms_time,

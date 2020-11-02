@@ -22,13 +22,13 @@ def make_packet(facility_id, sensor_code, pv):
     int_pv2 = chr(int(hex_pv[2:4], 16))
     int_pv3 = chr(int(hex_pv[4:6], 16))
     int_pv4 = chr(int(hex_pv[6:8], 16))
-    packet = '\x02\x00\x00\x00\x00' + hd_fid1 + hd_fid2 + hd_fid3 + hd_fid4 + hd_sid1 + hd_sid2 + str('P') + str(
-        'V') + int_pv1 + int_pv2 + int_pv3 + int_pv4 + '\x01\x03'
-    return packet
+    gateway_packet = '\x02\x00\x00\x00\x00' + hd_fid1 + hd_fid2 + hd_fid3 + hd_fid4 + hd_sid1 + hd_sid2 + \
+                     'P' + 'V' + int_pv1 + int_pv2 + int_pv3 + int_pv4 + '\x01\x03'
+    return gateway_packet
 
 
-def convert(list):
-    return tuple(i for i in list)
+def convert(fields):
+    return tuple(field for field in fields)
 
 
 if __name__ == '__main__':
@@ -38,10 +38,8 @@ if __name__ == '__main__':
                                     'TS_VOLT1_(RT)_1', 'TS_VOLT1_(ST)_1'], axis=1)
     Emulation_Data.columns.to_list()
     Emulation_Data_json = Emulation_Data.to_dict(orient='records')
-    column_list = ['TS_AMP1_(R)', 'TS_AMP1_(S)', 'TS_AMP1_(T)','INNER_PRESS','PUMP_PRESS']
-    # Sample packet (2, 0, 0, 0, 0, 84, 83, 0, 1, 0, 9, 80, 86, 0, 0, 1, 74, 1, 3)
-    # Sample packet2 (2, 0, 0, 0, 0, 84, 83, 0, 101, 0, 1, 80, 86, 0, 0, 0, 175, 1, 3)
-    # facility_id 설비명 / 설비 ID, sensor_code : 센서에 대한 설명(iiot_server의 facilities_dict 참조), pv : 현재 센서 값
+    column_list = ['TS_AMP1_(R)', 'TS_AMP1_(S)', 'TS_AMP1_(T)', 'INNER_PRESS', 'PUMP_PRESS']
+    
     sensor_id_map = {'TS_VOLT1_(RS)': 1,
                      'TS_VOLT1_(ST)': 2,
                      'TS_VOLT1_(RT)': 3,
@@ -54,6 +52,9 @@ if __name__ == '__main__':
                      'TEMPERATURE1(SV)': 10,
                      'OVER_TEMP': 11}
     
+    # Sample packet (2, 0, 0, 0, 0, 84, 83, 0, 1, 0, 9, 80, 86, 0, 0, 1, 74, 1, 3)
+    # Sample packet2 (2, 0, 0, 0, 0, 84, 83, 0, 101, 0, 1, 80, 86, 0, 0, 0, 175, 1, 3)
+    # facility_id 설비명 / 설비 ID, sensor_code : 센서에 대한 설명(iiot server의 facilities_dict 참조), pv : 현재 센서 값
     for i, emulation_data in enumerate(Emulation_Data_json):
         for column in column_list:
             print(i, column, 'code{:04d}'.format(sensor_id_map[column]), 'PV', int(emulation_data[column] / 100))
