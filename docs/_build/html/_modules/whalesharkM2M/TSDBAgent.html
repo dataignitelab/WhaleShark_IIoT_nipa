@@ -1,0 +1,355 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>whalesharkM2M.TSDBAgent &mdash; WhaleShark_IIoT  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> WhaleShark_IIoT
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../whalesharkM2M.html">whalesharkM2M package</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">WhaleShark_IIoT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>whalesharkM2M.TSDBAgent</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for whalesharkM2M.TSDBAgent</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">pika</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">redis</span>
+<span class="kn">from</span> <span class="nn">influxdb</span> <span class="kn">import</span> <span class="n">InfluxDBClient</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="s1"> </span><span class="si">%(levelname)-8s</span><span class="s1"> </span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">,</span>
+                    <span class="n">stream</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span> <span class="n">datefmt</span><span class="o">=</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;pika&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">propagate</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="Agent"><a class="viewcode-back" href="../../whalesharkM2M.TSDBAgent.html#whalesharkM2M.TSDBAgent.Agent">[docs]</a><span class="k">class</span> <span class="nc">Agent</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;config/config_server_develop.yaml&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">config_obj</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">FullLoader</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rabbitmq_host</span> <span class="o">=</span> <span class="n">config_obj</span><span class="p">[</span><span class="s1">&#39;iiot_server&#39;</span><span class="p">][</span><span class="s1">&#39;rabbit_mq&#39;</span><span class="p">][</span><span class="s1">&#39;ip_address&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rabbitmq_port</span> <span class="o">=</span> <span class="n">config_obj</span><span class="p">[</span><span class="s1">&#39;iiot_server&#39;</span><span class="p">][</span><span class="s1">&#39;rabbit_mq&#39;</span><span class="p">][</span><span class="s1">&#39;port&#39;</span><span class="p">]</span>
+       
+            <span class="bp">self</span><span class="o">.</span><span class="n">redis_host</span> <span class="o">=</span> <span class="n">config_obj</span><span class="p">[</span><span class="s1">&#39;iiot_server&#39;</span><span class="p">][</span><span class="s1">&#39;redis_server&#39;</span><span class="p">][</span><span class="s1">&#39;ip_address&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">redis_port</span> <span class="o">=</span> <span class="n">config_obj</span><span class="p">[</span><span class="s1">&#39;iiot_server&#39;</span><span class="p">][</span><span class="s1">&#39;redis_server&#39;</span><span class="p">][</span><span class="s1">&#39;port&#39;</span><span class="p">]</span>
+        
+            <span class="bp">self</span><span class="o">.</span><span class="n">influx_host</span> <span class="o">=</span> <span class="n">config_obj</span><span class="p">[</span><span class="s1">&#39;iiot_server&#39;</span><span class="p">][</span><span class="s1">&#39;influxdb&#39;</span><span class="p">][</span><span class="s1">&#39;ip_address&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">influx_port</span> <span class="o">=</span> <span class="n">config_obj</span><span class="p">[</span><span class="s1">&#39;iiot_server&#39;</span><span class="p">][</span><span class="s1">&#39;influxdb&#39;</span><span class="p">][</span><span class="s1">&#39;port&#39;</span><span class="p">]</span>
+        
+            <span class="bp">self</span><span class="o">.</span><span class="n">influx_id</span> <span class="o">=</span> <span class="n">config_obj</span><span class="p">[</span><span class="s1">&#39;iiot_server&#39;</span><span class="p">][</span><span class="s1">&#39;influxdb&#39;</span><span class="p">][</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">influx_pwd</span> <span class="o">=</span> <span class="n">config_obj</span><span class="p">[</span><span class="s1">&#39;iiot_server&#39;</span><span class="p">][</span><span class="s1">&#39;influxdb&#39;</span><span class="p">][</span><span class="s1">&#39;pwd&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">influx_db</span> <span class="o">=</span> <span class="n">config_obj</span><span class="p">[</span><span class="s1">&#39;iiot_server&#39;</span><span class="p">][</span><span class="s1">&#39;influxdb&#39;</span><span class="p">][</span><span class="s1">&#39;db&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="Agent.connect_redis"><a class="viewcode-back" href="../../whalesharkM2M.TSDBAgent.html#whalesharkM2M.TSDBAgent.Agent.connect_redis">[docs]</a>    <span class="k">def</span> <span class="nf">connect_redis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get connector for redis</span>
+<span class="sd">        If you don&#39;t have redis, you can use redis on docker with follow steps.</span>
+<span class="sd">        Getting most recent redis image</span>
+<span class="sd">        shell: docker pull redis</span>
+
+<span class="sd">        docker pull redis</span>
+<span class="sd">        docker run --name whaleshark-redis -d -p 6379:6379 redis</span>
+<span class="sd">        docker run -it --link whaleshark-redis:redis --rm redis redis-cli -h redis -p 6379</span>
+
+<span class="sd">        :param host: redis access host ip</span>
+<span class="sd">        :param port: redis access port</span>
+<span class="sd">        :return: redis connector</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">redis_obj</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">conn_params</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="n">host</span><span class="p">,</span>
+                <span class="s2">&quot;port&quot;</span><span class="p">:</span> <span class="n">port</span><span class="p">,</span>
+                <span class="s2">&quot;db&quot;</span><span class="p">:</span><span class="mi">0</span>
+            <span class="p">}</span>
+            <span class="n">redis_obj</span> <span class="o">=</span> <span class="n">redis</span><span class="o">.</span><span class="n">StrictRedis</span><span class="p">(</span><span class="o">**</span><span class="n">conn_params</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">exp</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">redis_obj</span></div>
+
+<div class="viewcode-block" id="Agent.get_influxdb"><a class="viewcode-back" href="../../whalesharkM2M.TSDBAgent.html#whalesharkM2M.TSDBAgent.Agent.get_influxdb">[docs]</a>    <span class="k">def</span> <span class="nf">get_influxdb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">pwd</span><span class="p">,</span> <span class="n">db</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param host: InfluxDB access host ip</span>
+<span class="sd">        :param port: InfluxDB access port</span>
+<span class="sd">        :param name: InfluxDB access user name</span>
+<span class="sd">        :param pwd: InfluxDB access user password</span>
+<span class="sd">        :param db: Database to access</span>
+<span class="sd">        :return: InfluxDB connector</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">client</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">client</span> <span class="o">=</span> <span class="n">InfluxDBClient</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="n">pwd</span><span class="p">,</span> <span class="n">database</span><span class="o">=</span><span class="n">db</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">exp</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">client</span></div>
+
+<div class="viewcode-block" id="Agent.get_messagequeue"><a class="viewcode-back" href="../../whalesharkM2M.TSDBAgent.html#whalesharkM2M.TSDBAgent.Agent.get_messagequeue">[docs]</a>    <span class="k">def</span> <span class="nf">get_messagequeue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">port</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        If you don&#39;t have rabbitmq, you can use docker.</span>
+<span class="sd">        docker run -d --hostname whaleshark --name whaleshark-rabbit \</span>
+<span class="sd">        -p 5672:5672 -p 8080:15672 -e RABBITMQ_DEFAULT_USER=whaleshark \</span>
+<span class="sd">        -e RABBITMQ_DEFAULT_PASS=whaleshark rabbitmq:3-management</span>
+
+<span class="sd">        get message queue connector (rabbit mq) with address, port</span>
+<span class="sd">        :param address: rabbit mq server ip</span>
+<span class="sd">        :param port: rabbitmq server port(AMQP)</span>
+<span class="sd">        :return: rabbitmq connection channel</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">channel</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">credentials</span> <span class="o">=</span> <span class="n">pika</span><span class="o">.</span><span class="n">PlainCredentials</span><span class="p">(</span><span class="s1">&#39;whaleshark&#39;</span><span class="p">,</span> <span class="s1">&#39;whaleshark&#39;</span><span class="p">)</span>
+            <span class="n">param</span> <span class="o">=</span> <span class="n">pika</span><span class="o">.</span><span class="n">ConnectionParameters</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="n">credentials</span><span class="p">)</span>
+            <span class="n">connection</span> <span class="o">=</span> <span class="n">pika</span><span class="o">.</span><span class="n">BlockingConnection</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+            <span class="n">channel</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">channel</span><span class="p">()</span>
+    
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">exp</span><span class="p">))</span>
+    
+        <span class="k">return</span> <span class="n">channel</span></div>
+
+<div class="viewcode-block" id="Agent.callback_mqreceive"><a class="viewcode-back" href="../../whalesharkM2M.TSDBAgent.html#whalesharkM2M.TSDBAgent.Agent.callback_mqreceive">[docs]</a>    <span class="k">def</span> <span class="nf">callback_mqreceive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ch</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">properties</span><span class="p">,</span> <span class="n">body</span><span class="p">):</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="n">facility_msg_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
+        <span class="n">table_name</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">facility_msg_json</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">tags</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;mqtt body:&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">facility_msg_json</span><span class="p">))</span>
+        <span class="n">me_timestamp</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">facility_msg_json</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="s1">&#39;pub_time&#39;</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;config key:&#39;</span> <span class="o">+</span> <span class="n">key</span> <span class="o">+</span> <span class="s1">&#39;value:&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">facility_msg_json</span><span class="p">[</span><span class="n">table_name</span><span class="p">][</span><span class="n">key</span><span class="p">]))</span>
+                <span class="n">fields</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">facility_msg_json</span><span class="p">[</span><span class="n">table_name</span><span class="p">][</span><span class="n">key</span><span class="p">])</span>
+    
+        <span class="n">pub_time</span> <span class="o">=</span> <span class="n">facility_msg_json</span><span class="p">[</span><span class="n">table_name</span><span class="p">][</span><span class="s1">&#39;pub_time&#39;</span><span class="p">]</span>
+
+        <span class="n">fields</span><span class="p">[</span><span class="s1">&#39;me_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">me_timestamp</span>
+        <span class="n">influx_json</span> <span class="o">=</span> <span class="p">[{</span>
+            <span class="s1">&#39;measurement&#39;</span><span class="p">:</span> <span class="n">table_name</span><span class="p">,</span>
+            <span class="s1">&#39;fields&#39;</span><span class="p">:</span> <span class="n">fields</span>
+        <span class="p">}]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">influxdb_mgr</span><span class="o">.</span><span class="n">write_points</span><span class="p">(</span><span class="n">influx_json</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;influx write success:&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">influx_json</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;influx write faile:&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">influx_json</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">exp</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Agent.resource_config"><a class="viewcode-back" href="../../whalesharkM2M.TSDBAgent.html#whalesharkM2M.TSDBAgent.Agent.resource_config">[docs]</a>    <span class="k">def</span> <span class="nf">resource_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">influxdb_mgr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_influxdb</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">influx_host</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">influx_port</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">influx_id</span><span class="p">,</span> <span class="n">pwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">influx_pwd</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">influx_db</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">influxdb_mgr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;influxdb configuration fail&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mq_channel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_messagequeue</span><span class="p">(</span><span class="n">address</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rabbitmq_host</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rabbitmq_port</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mq_channel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;rabbitmq configuration fail&#39;</span><span class="p">)</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">redis_mgr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connect_redis</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">redis_host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">redis_port</span><span class="p">)</span></div>
+    
+<div class="viewcode-block" id="Agent.get_influxdb_mgr"><a class="viewcode-back" href="../../whalesharkM2M.TSDBAgent.html#whalesharkM2M.TSDBAgent.Agent.get_influxdb_mgr">[docs]</a>    <span class="k">def</span> <span class="nf">get_influxdb_mgr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">influxdb_mgr</span></div>
+    
+<div class="viewcode-block" id="Agent.syncmessage"><a class="viewcode-back" href="../../whalesharkM2M.TSDBAgent.html#whalesharkM2M.TSDBAgent.Agent.syncmessage">[docs]</a>    <span class="k">def</span> <span class="nf">syncmessage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">devinfo</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">redis_mgr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dev_info&#39;</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">dev_id</span> <span class="ow">in</span> <span class="n">devinfo</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mq_channel</span><span class="o">.</span><span class="n">queue_declare</span><span class="p">(</span><span class="n">queue</span><span class="o">=</span><span class="n">dev_id</span><span class="p">,</span> <span class="n">exclusive</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">tx_queue</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">method</span><span class="o">.</span><span class="n">queue</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mq_channel</span><span class="o">.</span><span class="n">queue_bind</span><span class="p">(</span><span class="n">exchange</span><span class="o">=</span><span class="s1">&#39;facility&#39;</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="n">tx_queue</span><span class="p">)</span>
+            <span class="n">call_back_arg</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;measurement&#39;</span><span class="p">:</span> <span class="n">tx_queue</span><span class="p">}</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mq_channel</span><span class="o">.</span><span class="n">basic_consume</span><span class="p">(</span><span class="n">tx_queue</span><span class="p">,</span> <span class="n">on_message_callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">callback_mqreceive</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">exp</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mq_channel</span><span class="o">.</span><span class="n">start_consuming</span><span class="p">()</span></div></div>
+        
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">mqtt_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">()</span>
+    <span class="n">mqtt_agent</span><span class="o">.</span><span class="n">resource_config</span><span class="p">()</span>
+    <span class="n">mqtt_agent</span><span class="o">.</span><span class="n">syncmessage</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2021, HongJoong.Shin
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

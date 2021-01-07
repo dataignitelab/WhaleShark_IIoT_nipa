@@ -25,8 +25,8 @@ class instruments:
 			self.instrument.serial.timeout=slave_desc['timeout']
 			self.instrument.mode=slave_desc['mode']
 			self.function={}
-			self.function['pv']=slave_desc['pv']
-			self.function['sv']=slave_desc['sv']
+			self.function['PV']=slave_desc['PV']
+			self.function['SV']=slave_desc['SV']
 			self.facility_name=(slave_desc['facility_name'][0:1],slave_desc['facility_name'][1:2])
 			self.facility_id=(slave_desc['facility_id'][0:1],slave_desc['facility_id'][1:2])
 
