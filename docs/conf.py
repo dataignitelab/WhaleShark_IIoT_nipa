@@ -20,8 +20,8 @@ print('경로',os.path)
 # -- Project information -----------------------------------------------------
 
 project = 'WhaleShark_IIoT'
-copyright = '2021, HongJoong.Shin'
-author = 'HongJoong.Shin'
+copyright = '2021, DataIgniteLab'
+author = 'DataIgniteLab'
 
 
 # -- General configuration ---------------------------------------------------
