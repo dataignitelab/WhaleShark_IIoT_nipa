@@ -24,7 +24,7 @@ if container is exist
  docker restart  whaleshark-rabbit
 
 ### API
- https://whaleshark-iiot.readthedocs.io/en/latest/
+ https://whalesharkiiot.readthedocs.io/
 
 ## Download
  - [Last Release] (https://github.com/dataignitelab/WhaleShark_IIoT)
