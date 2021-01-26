@@ -91,7 +91,7 @@ rt_bool_t InitLed(void)
 	ledInfo.blinkTimer = rt_timer_create(
 								"blinktimer",
 								BlinkTimer,
-								&ledInfo,
+								RT_NULL,
 								rt_tick_from_millisecond(BLINK_PERIOD),
 								RT_TIMER_FLAG_PERIODIC);
 	return retVal;

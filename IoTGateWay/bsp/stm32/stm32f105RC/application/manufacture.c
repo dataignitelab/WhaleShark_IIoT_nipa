@@ -80,9 +80,6 @@ void ManufactureControlThread(void *params)
 
 			switch(mqData.messge)
 			{
-			case SMSG_REP_DATA:
-				rt_timer_stop(p_handle->manufactureTimer);
-				break;
 			case MSG_EXPIRED:
 				break;
 			case MSG_CHECK_DEVICE:

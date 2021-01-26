@@ -22,18 +22,13 @@
 /* Uart name */
 #define UART2_DEV_NAME						"uart2"
 #define UART3_DEV_NAME						"uart3"
-#define UART5_DEV_NAME						"uart5"
-
-#define UART2_PORT                   		UART2_DEV_NAME
-#define UART3_PORT                   		UART3_DEV_NAME
-#define UART5_PORT                   		UART5_DEV_NAME
 
 /*rt-thread stack size*/
 #define APPLICATION_STACK_SIZE				1024U
 #define USBCONSOLE_STACK_SIZE				1024U
-#define PLCCOMMM_STACK_SIZE				    1024U
-#define WIFI_RX_STACK_SZIE					1024U
-#define	NETWORKMANAGER_STACK_SIZE			1024U
+#define PLCCOMMM_STACK_SIZE				    1536U
+#define WIFI_RX_STACK_SZIE					2048U
+#define	NETWORKMANAGER_STACK_SIZE			2048U
 #define MANUFACTURE_CONTROL_STACK_SIZE		1024U
 
 /**/
@@ -51,6 +46,10 @@
 #define DEFAULT_MAC							"00:00:00:00:00:00"
 #define DEFAULT_DEVICE						"TS0000" //Default Device Info
 #define DEFAULT_DOMAIN						"onsite-monitor.xip.kr"
+#define DEFAULT_CLIENT_ID					"Client"
+#define DEFAULT_USER_NAME					"UserName"
+#define DEFAULT_MQTT_PASSWORD				"Password"
+#define DEFAULT_KEEP_ALIVE					0
 
 #endif /* __APPCONFIG_H__ */
 

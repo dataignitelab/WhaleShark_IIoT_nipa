@@ -54,7 +54,7 @@ void SysTick_Handler(void)
 
 uint32_t HAL_GetTick(void)
 {
-    return rt_tick_get() * 1000 / RT_TICK_PER_SECOND;
+    return rt_tick_get_millisecond();
 }
 
 void HAL_SuspendTick(void)
@@ -102,10 +102,12 @@ void rt_hw_us_delay(rt_uint32_t us)
     start = SysTick->VAL;
     reload = SysTick->LOAD;
     us_tick = SystemCoreClock / 1000000UL;
-    do {
+    do
+    {
         now = SysTick->VAL;
-        delta = start > now ? start - now : reload + start - now;
-    } while(delta < us_tick * us);
+        delta = start >= now ? start - now : reload + start - now;
+    }
+    while (delta < us_tick * us);
 }
 
 /**

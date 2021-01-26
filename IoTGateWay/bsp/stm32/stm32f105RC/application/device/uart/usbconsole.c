@@ -23,7 +23,10 @@ static CLIINFO s_cliInfo[] = {
 	{CLI_SDNS, "SDNS", "[Set DNS Server]\n"},			{CLI_STCP, "STCP", "[Set Destination IP/Port]\n"},
 	{CLI_DHCP, "DHCP", "[Set DHCP Mode]\n"},			{CLI_SSID, "SSID", "[Set Target AP SSID/Password]\n"},
 	{CLI_SMAC, "SMAC", "[Set MacAddress]\n"},           {CLI_SDEV, "SDEV", "[Set Device Type and Number]\n"},
-	{CLI_SDMC, "SDMC", "[Set IP or Domain]\n"},			{CLI_SDMI, "SDMI", "[Set Domain Information]\n"}
+	{CLI_SDMC, "SDMC", "[Set IP or Domain]\n"},			{CLI_SDMI, "SDMI", "[Set Domain Information]\n"},
+	{CLI_MQTT, "MQTT", "[Set MQTT Mode]\n"},			{CLI_SCID, "SCID", "[Set MQTT Client ID]\n"},
+	{CLI_NAME, "NAME", "[Set MQTT User Name]\n"},		{CLI_PSWD, "PSWD", "[Set MQTT Password]\n"},
+	{CLI_SKAL, "SKAL", "[Set MQTT Keep Alive]\n"},		{CLI_PORT, "PORT", "[Set Network Port]"}
 };
 
 typedef struct usbconsole_data_tag {
@@ -137,13 +140,13 @@ static void OnSetTcp(rt_uint8_t *pData, rt_size_t dataSize)
 		char *end = strtok(RT_NULL,RT_NULL); //Port
 		SetTcpIP((rt_uint8_t *)begin,(rt_size_t)(end-begin));
 		rt_uint16_t port = atoi(end);
-		SetTcpPort(port);
+		SetNetworkPort(port);
 	}
 	else
 	{
 		rt_kprintf("Get Destination IP/Port Information\r\n");
 		rt_kprintf("Destination IP: %s\r\n", GetTcpIp());
-		rt_kprintf("Destination Port Information: %d\r\n",GetTcpPort());
+		rt_kprintf("Destination Port Information: %d\r\n",GetNetworkPort());
 	}
 }
 
@@ -264,6 +267,79 @@ static void OnSetDomainInfo(rt_uint8_t *pData, rt_size_t dataSize)
 	}
 }
 
+static void OnSetMqttOn(rt_uint8_t *pData, rt_size_t dataSize)
+{
+	if( 0 < dataSize)
+	{
+		SetMqttOn(strtoul((char *)pData, NULL, 10));
+	}
+	else
+	{
+		rt_kprintf("MQTT %s\r\n", (ENABLE == GetMqttOn())?"On":"Off");
+	}
+}
+
+static void OnSetMqttClientId(rt_uint8_t *pData, rt_size_t dataSize)
+{
+	if( 0 < dataSize)
+	{
+		SetMqttClientId(pData,dataSize);
+	}
+	else
+	{
+		rt_kprintf("MQTT Clinet ID: %s\r\n", GetMqttClientId());
+	}
+}
+
+static void OnSetMqttUserName(rt_uint8_t *pData, rt_size_t dataSize)
+{
+	if( 0 < dataSize)
+	{
+		SetMqttUserName(pData,dataSize);
+	}
+	else
+	{
+		rt_kprintf("MQTT User Name: %s\r\n", GetMqttUserName());
+	}
+}
+
+static void OnSetMqttPassword(rt_uint8_t *pData, rt_size_t dataSize)
+{
+	if( 0 < dataSize)
+	{
+		SetMqttPassword(pData,dataSize);
+	}
+	else
+	{
+		rt_kprintf("MQTT Password: %s\r\n", GetMqttPassword());
+	}
+}
+
+static void OnSetMqttKeepAlive(rt_uint8_t *pData, rt_size_t dataSize)
+{
+	if( 0 < dataSize)
+	{
+		SetMqttKeepAlive(strtoul((char *)pData, NULL, 10));
+	}
+	else
+	{
+		rt_kprintf("MQTT KeepAlive: %u\r\n", GetMqttKeepAlive());
+	}
+}
+
+static void OnSetPort(rt_uint8_t *pData, rt_size_t dataSize)
+{
+	if( 0 < dataSize)
+	{
+		rt_uint16_t port = atoi((char *)pData);
+		SetNetworkPort(port);
+	}
+	else
+	{
+		rt_kprintf("Connection Port: %u\r\n", GetNetworkPort());
+	}
+}
+
 static rt_err_t usbconsole_rx_ind(rt_device_t dev, rt_size_t size)
 {
     return rt_event_send(usbconsole_data.rx_event, SMSG_RX_DATA);
@@ -363,6 +439,24 @@ rt_size_t ParserCliCommand(rt_uint8_t *p_buff, rt_size_t rx_size)
 							case CLI_SDMI:
 								OnSetDomainInfo(begin,valLen);
 								break;
+							case CLI_MQTT:
+								OnSetMqttOn(begin,valLen);
+								break;
+							case CLI_SCID:
+								OnSetMqttClientId(begin,valLen);
+								break;
+							case CLI_NAME:
+								OnSetMqttUserName(begin,valLen);
+								break;
+							case CLI_PSWD:
+								OnSetMqttPassword(begin,valLen);
+								break;
+							case CLI_SKAL:
+								OnSetMqttKeepAlive(begin,valLen);
+								break;
+							case CLI_PORT:
+								OnSetPort(begin,valLen);
+								break;
 							default :
 								rt_kprintf("Unknown cli command.\r\n");
 							}
@@ -419,6 +513,18 @@ static void usbconsole_rx_thread(void *params)
 			} while(0 < ulBytes);
         }
     }
+}
+
+void DeInitUsbconsole(void)
+{
+	if(RT_EOK != rt_event_delete(usbconsole_data.rx_event))
+	{
+		rt_kprintf("Deleting Usbconsole Rx Event Failed.\r\n");
+	}
+	else if(RT_EOK != rt_device_close(usbconsole_data.uport))
+	{
+		rt_kprintf("Closing Usbconsole Uart Device Failed.\r\n");
+	}
 }
 
 void InitUsbconsoleData(void)
