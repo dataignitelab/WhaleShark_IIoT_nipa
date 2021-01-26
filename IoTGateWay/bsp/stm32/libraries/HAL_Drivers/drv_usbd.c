@@ -22,16 +22,12 @@ static PCD_HandleTypeDef _stm_pcd;
 static struct udcd _stm_udc;
 static struct ep_id _ep_pool[] =
 {
-    {0x0,  USB_EP_ATTR_CONTROL,     USB_DIR_INOUT,  64, ID_ASSIGNED  },
     {0x1,  USB_EP_ATTR_BULK,        USB_DIR_IN,     64, ID_UNASSIGNED},
     {0x1,  USB_EP_ATTR_BULK,        USB_DIR_OUT,    64, ID_UNASSIGNED},
-    {0x2,  USB_EP_ATTR_INT,         USB_DIR_IN,     64, ID_UNASSIGNED},
-    {0x2,  USB_EP_ATTR_INT,         USB_DIR_OUT,    64, ID_UNASSIGNED},
-    {0x3,  USB_EP_ATTR_BULK,        USB_DIR_IN,     64, ID_UNASSIGNED},
+    {0x2,  USB_EP_ATTR_INT,         USB_DIR_IN,     8, ID_UNASSIGNED},
 #if !defined(SOC_SERIES_STM32F1)
     {0x3,  USB_EP_ATTR_BULK,        USB_DIR_OUT,    64, ID_UNASSIGNED},
 #endif
-    {0xFF, USB_EP_ATTR_TYPE_MASK,   USB_DIR_MASK,   0,  ID_ASSIGNED  },
 };
 
 void USBD_IRQ_HANDLER(void)
@@ -45,6 +41,7 @@ void USBD_IRQ_HANDLER(void)
 void HAL_PCD_ResetCallback(PCD_HandleTypeDef *pcd)
 {
     /* open ep0 OUT and IN */
+	pcd->Init.speed = USBD_PCD_SPEED;
     HAL_PCD_EP_Open(pcd, 0x00, 0x40, EP_TYPE_CTRL);
     HAL_PCD_EP_Open(pcd, 0x80, 0x40, EP_TYPE_CTRL);
     rt_usbd_reset_handler(&_stm_udc);
@@ -92,34 +89,6 @@ void HAL_PCD_DataOutStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum)
     {
         rt_usbd_ep0_out_handler(&_stm_udc, hpcd->OUT_ep[0].xfer_count);
     }
-}
-
-void HAL_PCDEx_SetConnectionState(PCD_HandleTypeDef *hpcd, uint8_t state)
-{
-    if (state == 1)
-    {
-#if defined(SOC_SERIES_STM32F1)
-    rt_pin_mode(BSP_USB_CONNECT_PIN,PIN_MODE_OUTPUT);
-    rt_pin_write(BSP_USB_CONNECT_PIN, BSP_USB_PULL_UP_STATUS);
-#endif
-    }
-    else
-    {
-#if defined(SOC_SERIES_STM32F1)
-    rt_pin_mode(BSP_USB_CONNECT_PIN,PIN_MODE_OUTPUT);
-    rt_pin_write(BSP_USB_CONNECT_PIN, !BSP_USB_PULL_UP_STATUS);
-#endif
-    }
-}
-
-void HAL_PCD_SuspendCallback(PCD_HandleTypeDef *hpcd)
-{
-  rt_kprintf("HAL_PCD_SuspendCallback\r\n");
-}
-
-void HAL_PCD_ResumeCallback(PCD_HandleTypeDef *hpcd)
-{
-	rt_kprintf("HAL_PCD_ResumeCallback\r\n");
 }
 
 static rt_err_t _ep_set_stall(rt_uint8_t address)
@@ -202,14 +171,11 @@ static rt_err_t _init(rt_device_t device)
     PCD_HandleTypeDef *pcd;
     /* Set LL Driver parameters */
     pcd = (PCD_HandleTypeDef *)device->user_data;
+
     pcd->Instance = USBD_INSTANCE;
     memset(&pcd->Init, 0, sizeof pcd->Init);
     pcd->Init.dev_endpoints = 4;
     pcd->Init.speed = USBD_PCD_SPEED;
-    pcd->Init.Sof_enable = DISABLE;
-    pcd->Init.low_power_enable = DISABLE;
-    pcd->Init.vbus_sensing_enable = DISABLE;
-    pcd->Init.ep0_mps = EP_MPS_64;
 #if !defined(SOC_SERIES_STM32F1)
     pcd->Init.phy_itface = USBD_PCD_PHY_MODULE;
 #endif

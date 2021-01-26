@@ -95,12 +95,12 @@ void SetDnsServer(rt_uint8_t *pData, rt_size_t dataSize)
 	}
 }
 
-rt_uint16_t GetTcpPort(void)
+rt_uint16_t GetNetworkPort(void)
 {
 	return configInfo.cfg.networkdCofig.destPort;
 }
 
-void SetTcpPort(rt_uint16_t data)
+void SetNetworkPort(rt_uint16_t data)
 {
 	Config *pCfg = &configInfo.cfg;
 
@@ -278,6 +278,94 @@ void SetDomainInfo(rt_uint8_t *pData, rt_size_t dataSize)
 	}
 }
 
+rt_uint8_t GetMqttOn(void)
+{
+	return configInfo.cfg.networkdCofig.mqttOn;
+}
+
+void SetMqttOn(rt_uint8_t mqttOn)
+{
+	Config *pCfg = &configInfo.cfg;
+
+	if(pCfg->networkdCofig.mqttOn != mqttOn)
+	{
+		pCfg->networkdCofig.mqttOn = mqttOn;
+		rt_kprintf("Set MQTT %s \r\n", (ENABLE == pCfg->networkdCofig.mqttOn)?"On":"Off");
+		FlashWrite((rt_uint8_t *)pCfg, sizeof(Config));
+	}
+}
+
+rt_uint8_t *GetMqttClientId(void)
+{
+	return configInfo.cfg.networkdCofig.mqttClientId;
+}
+
+void SetMqttClientId(rt_uint8_t *pData, rt_size_t dataSize)
+{
+	Config *pCfg = &configInfo.cfg;
+
+	if(0 != rt_strncmp((char *)pCfg->networkdCofig.mqttClientId, (char *)pData, dataSize))
+	{
+		rt_memset(pCfg->networkdCofig.mqttClientId,0,MQTT_CLIENT_ID_MAX);
+		rt_memcpy(pCfg->networkdCofig.mqttClientId,pData,dataSize);
+		rt_kprintf("Set MQTT Client ID: %s\r\n", pCfg->networkdCofig.mqttClientId);
+		FlashWrite((rt_uint8_t *)pCfg, sizeof(Config));
+	}
+}
+
+rt_uint8_t *GetMqttUserName(void)
+{
+	return configInfo.cfg.networkdCofig.mqttUserName;
+}
+
+void SetMqttUserName(rt_uint8_t *pData, rt_size_t dataSize)
+{
+	Config *pCfg = &configInfo.cfg;
+
+	if(0 != rt_strncmp((char *)pCfg->networkdCofig.mqttUserName, (char *)pData, dataSize))
+	{
+		rt_memset(pCfg->networkdCofig.mqttUserName,0,MQTT_USER_NAME_MAX);
+		rt_memcpy(pCfg->networkdCofig.mqttUserName,pData,dataSize);
+		rt_kprintf("Set MQTT User Name: %s\r\n", pCfg->networkdCofig.mqttUserName);
+		FlashWrite((rt_uint8_t *)pCfg, sizeof(Config));
+	}
+}
+
+rt_uint8_t *GetMqttPassword(void)
+{
+	return configInfo.cfg.networkdCofig.mqttPassword;
+}
+
+void SetMqttPassword(rt_uint8_t *pData, rt_size_t dataSize)
+{
+	Config *pCfg = &configInfo.cfg;
+
+	if(0 != rt_strncmp((char *)pCfg->networkdCofig.mqttPassword, (char *)pData, dataSize))
+	{
+		rt_memset(pCfg->networkdCofig.mqttPassword,0,MQTT_PASSWORD_MAX);
+		rt_memcpy(pCfg->networkdCofig.mqttPassword,pData,dataSize);
+		rt_kprintf("Set MQTT User Name: %s\r\n", pCfg->networkdCofig.mqttPassword);
+		FlashWrite((rt_uint8_t *)pCfg, sizeof(Config));
+	}
+}
+
+rt_uint16_t GetMqttKeepAlive(void)
+{
+	return configInfo.cfg.networkdCofig.mqttKeepAlive;
+}
+
+void SetMqttKeepAlive(rt_uint16_t mqttKeepAlive)
+{
+	Config *pCfg = &configInfo.cfg;
+
+	if(pCfg->networkdCofig.mqttKeepAlive != mqttKeepAlive)
+	{
+		pCfg->networkdCofig.mqttKeepAlive = mqttKeepAlive;
+		rt_kprintf("Set MQTT KeepAlive %u \r\n", pCfg->networkdCofig.mqttKeepAlive);
+		FlashWrite((rt_uint8_t *)pCfg, sizeof(Config));
+	}
+}
+
 void ShowConfig(void)
 {
 	rt_kprintf("-----------------------------------------------\r\n");
@@ -295,6 +383,11 @@ void ShowConfig(void)
 	rt_kprintf(" Device Info: %s \r\n", configInfo.cfg.device);
 	rt_kprintf(" Domain %s \r\n", (ENABLE == GetDomainConfig())?"On":"Off");
 	rt_kprintf(" Domain Information: %s \r\n", configInfo.cfg.networkdCofig.domainInfo);
+	rt_kprintf(" MQTT %s\r\n",(ENABLE == configInfo.cfg.networkdCofig.mqttOn)?"On":"Off");
+	rt_kprintf(" MQTT Client ID: %s\r\n",configInfo.cfg.networkdCofig.mqttClientId);
+	rt_kprintf(" MQTT User Name: %s\r\n",configInfo.cfg.networkdCofig.mqttUserName);
+	rt_kprintf(" MQTT Password: %s\r\n",configInfo.cfg.networkdCofig.mqttPassword);
+	rt_kprintf(" MQTT KeepAlive: %u\r\n",configInfo.cfg.networkdCofig.mqttKeepAlive);
 	rt_kprintf("-----------------------------------------------\r\n");
 }
 
@@ -314,6 +407,8 @@ rt_bool_t LoadConfig(void)
 		pCfg->networkdCofig.domainOn = DISABLE;
 		pCfg->waterMark = WATERMARK_VALUE;
 		pCfg->manufacture = DISABLE;
+		pCfg->networkdCofig.mqttKeepAlive = DEFAULT_KEEP_ALIVE;
+		pCfg->networkdCofig.mqttOn = 1;
 		rt_memcpy(pCfg->networkdCofig.apSSID,DEFAULT_SSID,rt_strlen(DEFAULT_SSID));
 		rt_memcpy(pCfg->networkdCofig.apPassword,DEFAULT_PASSWORD,rt_strlen(DEFAULT_PASSWORD));
 		rt_memcpy(pCfg->networkdCofig.destIp,DEFAULT_IP,rt_strlen(DEFAULT_IP));
@@ -324,6 +419,9 @@ rt_bool_t LoadConfig(void)
 		rt_memcpy(pCfg->networkdCofig.macAddress,DEFAULT_MAC,rt_strlen(DEFAULT_MAC));
 		rt_memcpy(pCfg->device,DEFAULT_DEVICE,rt_strlen(DEFAULT_DEVICE));
 		rt_memcpy(pCfg->networkdCofig.domainInfo,DEFAULT_DOMAIN,rt_strlen(DEFAULT_DOMAIN));
+		rt_memcpy(pCfg->networkdCofig.mqttClientId,DEFAULT_CLIENT_ID,rt_strlen(DEFAULT_CLIENT_ID));
+		rt_memcpy(pCfg->networkdCofig.mqttUserName,DEFAULT_USER_NAME,rt_strlen(DEFAULT_USER_NAME));
+		rt_memcpy(pCfg->networkdCofig.mqttPassword,DEFAULT_MQTT_PASSWORD,rt_strlen(DEFAULT_MQTT_PASSWORD));
 
 		retVal = FlashWrite((rt_uint8_t *)pCfg, sizeof(Config));
 	}

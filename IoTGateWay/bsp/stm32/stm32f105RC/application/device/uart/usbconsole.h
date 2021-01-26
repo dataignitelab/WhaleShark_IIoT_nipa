@@ -13,7 +13,9 @@ typedef enum cli_ID
 	CLI_SGWY, CLI_SDNS, CLI_STCP,
 	CLI_DHCP, CLI_SSID, CLI_SMFR,
 	CLI_SMAC, CLI_SDEV,	CLI_SDMC,
-	CLI_SDMI,
+	CLI_SDMI, CLI_MQTT, CLI_SCID,
+	CLI_NAME, CLI_PSWD, CLI_SKAL,
+	CLI_PORT,
 
 	CLI_MAX
 } cliId;
@@ -26,6 +28,7 @@ typedef struct _cli_Info{
 } CLIINFO;
 #pragma pack(pop)
 
+void DeInitUsbconsole(void);
 rt_bool_t InitUsbconsole(void);
 
 #endif /* __USBCONSOLE_H__ */

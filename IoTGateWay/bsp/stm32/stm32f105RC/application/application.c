@@ -8,17 +8,32 @@
 #include "application.h"
 #include <config/appconfig.h>
 #include <device/uart/plccomm.h>
+#include <device/uart/usbconsole.h>
 #include <network/networkmanager.h>
 #include <device/led/led.h>
+
+#define REBOOT_TIMEOUT	3000
 
 typedef struct _APPINFO
 {
 	rt_mq_t appMq;
 
+	rt_timer_t	rebootTimer;
+
 	NetworkInfoData networkInfoData;
 }AppInfo;
 
 static AppInfo appInfo;
+
+void DeInitApplication(void)
+{
+	rt_kprintf("DeInitialize Application.\r\n");
+
+	if(RT_EOK != rt_mq_delete(appInfo.appMq))
+	{
+		rt_kprintf("Deleting Application Message Queue Failed.\r\n");
+	}
+}
 
 void ApplicationSendMessage(MqData_t *pMqData)
 {
@@ -28,11 +43,19 @@ void ApplicationSendMessage(MqData_t *pMqData)
 	}
 }
 
+void RebootTimer(void *params)
+{
+	DeInitUsbconsole();
+	NVIC_SystemReset();
+}
+
 void DeviceReboot(void)
 {
-	rt_kprintf("Restart IoT Gateway and Wi-Fi Module After 1 second\r\n");
-	rt_thread_delay(1000);
-	NVIC_SystemReset();
+	DeInitNetworkManager();
+	DeInitApplication();
+	rt_timer_stop(appInfo.rebootTimer);
+	rt_kprintf("Restart After 3 seconds\r\n");
+	rt_timer_start(appInfo.rebootTimer);
 }
 
 rt_bool_t StartApplication(void)
@@ -71,27 +94,19 @@ static void app_main_thread(void *params)
 					LedBlinkTurnOn(CHANNEL2_LED);//Sending Data
 					channel2Led = ENABLE;
 					break;
-				case STATUS_SEND_DATA:
-					if(DISABLE == channel2Led)
-					{
-						LedBlinkTurnOn(CHANNEL2_LED);//Sending Data
-						channel2Led = ENABLE;
-					}
-					break;
 				default:
 					break;
 				}
 				break;
-			case SMSG_WIFI_FAIL:
-			case SMSG_WIFI_ERROR:
-				switch(p_handle->networkInfoData.networkStatus)
-				{
-				case STATUS_SEND_DATA:
+			case SMSG_SEND_FAIL:
 					channel2Led = DISABLE;
 					LedTurnOff(CHANNEL2_LED);
 					break;
-				default:
-					break;
+			case SMSG_SEND_OK:
+				if(DISABLE == channel2Led)
+				{
+					LedBlinkTurnOn(CHANNEL2_LED);//Sending Data
+					channel2Led = ENABLE;
 				}
 				break;
 			}
@@ -102,6 +117,7 @@ static void app_main_thread(void *params)
 void InitApplicationInfo(void)
 {
 	appInfo.appMq = RT_NULL;
+	appInfo.rebootTimer = RT_NULL;
 }
 
 rt_bool_t InitApplication(void)
@@ -119,9 +135,11 @@ rt_bool_t InitApplication(void)
     tid = rt_thread_create("application", app_main_thread, (void *)h_data, APPLICATION_STACK_SIZE, RT_MAIN_THREAD_PRIORITY, 20);
     RT_ASSERT(RT_NULL != tid);
 
+    h_data->rebootTimer = rt_timer_create("rebootTimer", RebootTimer, RT_NULL, rt_tick_from_millisecond(REBOOT_TIMEOUT), RT_TIMER_FLAG_ONE_SHOT);
+	RT_ASSERT(RT_NULL != h_data->rebootTimer);
+
 	/* thread start  */
-	rt_err_t err = rt_thread_startup(tid);
-	RT_ASSERT(RT_EOK == err);
+	rt_thread_startup(tid);
 
 	if(RT_FALSE == (retVal=InitPlcComm()) || RT_FALSE == (retVal=InitNetworkManager()))
 	{

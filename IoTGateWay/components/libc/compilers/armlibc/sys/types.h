@@ -6,6 +6,7 @@
  * Change Logs:
  * Date           Author       Notes
  * 2020-09-05 Meco Man  fix bugs
+ * 2020-12-16     Meco Man     add useconds_t
  */
 #ifndef __TYPES_H__
 #define __TYPES_H__
@@ -20,5 +21,6 @@ typedef signed int   ssize_t;  /* Used for a count of bytes or an error indicati
 #else
 typedef long signed int   ssize_t;  /* Used for a count of bytes or an error indication. */
 #endif
+typedef unsigned long    useconds_t;    /* microseconds (unsigned) */
 
 #endif
