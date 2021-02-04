@@ -101,7 +101,6 @@ class Agent:
         body = body.decode('utf-8')
 
         facility_msg_json = json.loads(body)
-        print('mqreceice:%s' % (facility_msg_json))
         logging.debug('mqreceice:%s' % (facility_msg_json))
         table_name = list(facility_msg_json.keys())[0]
         fields = {}
