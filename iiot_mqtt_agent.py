@@ -99,12 +99,12 @@ class Agent:
 
     def callback_mqreceive(self, ch, method, properties, body):
         body = body.decode('utf-8')
-        logging.debug('mqreceice', body)
+
         facility_msg_json = json.loads(body)
+        logging.debug('mqreceice:%s' % (facility_msg_json))
         table_name = list(facility_msg_json.keys())[0]
         fields = {}
         tags = {}
-        logging.debug('mqtt body:' + str(facility_msg_json))
         me_timestamp = time.time()
         for key in facility_msg_json[table_name].keys():
             if key != 'pub_time':
