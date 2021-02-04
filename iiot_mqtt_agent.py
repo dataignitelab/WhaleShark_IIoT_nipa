@@ -99,6 +99,7 @@ class Agent:
 
     def callback_mqreceive(self, ch, method, properties, body):
         body = body.decode('utf-8')
+        logging.debug('mqreceice', body)
         facility_msg_json = json.loads(body)
         table_name = list(facility_msg_json.keys())[0]
         fields = {}
@@ -111,7 +112,7 @@ class Agent:
                 fields[key] = float(facility_msg_json[table_name][key])
     
         pub_time = facility_msg_json[table_name]['pub_time']
-        day = pub_time.split(' ')[0]
+        # day = pub_time.split(' ')[0]
         # pub_doc = self.mongo_mgr.document_bykey('facility', table_name, {'DAY': day})
         # if pub_doc is not None:
         #     self.mongo_mgr.document_upsert('facility', table_name, day, pub_time, status='CHECK')
