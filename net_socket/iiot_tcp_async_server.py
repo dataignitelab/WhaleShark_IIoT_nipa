@@ -5,7 +5,7 @@ import json
 import time
 from datetime import datetime
 import pika
-import mongo_manager
+# import mongo_manager
 from net_socket.signal_killer import GracefulInterruptHandler
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', stream=sys.stdout, level=logging.DEBUG,
@@ -106,7 +106,7 @@ def config_fac_msg(equipment_id, fac_daq, modbus_udp, redis_fac_info):
 class AsyncServer:
     
     def __init__(self, redis_manager):
-        self.mongo_mgr = mongo_manager.MongoMgr()
+        # self.mongo_mgr = mongo_manager.MongoMgr()
         self.redis_mgr = redis_manager
         
     def convert(self, packet_list):
@@ -175,12 +175,12 @@ class AsyncServer:
                 
                 ms_time = time.time()
                 pub_time = datetime.fromtimestamp(time.time())
-                mongo_db_name = 'facility'
-                collection = group + group_code
-                doc_key = '{:d}-{:02d}-{:02d}'.format(pub_time.year, pub_time.month, pub_time.day)
+                # mongo_db_name = 'facility'
+                # collection = group + group_code
+                # doc_key = '{:d}-{:02d}-{:02d}'.format(pub_time.year, pub_time.month, pub_time.day)
                 pub_time = str(pub_time).replace('.', 'ms')
-                if mqtt_valid == True:
-                    self.mongo_mgr.document_upsert(mongo_db_name, collection, doc_key, pub_time)
+                # if mqtt_valid == True:
+                #     self.mongo_mgr.document_upsert(mongo_db_name, collection, doc_key, pub_time)
                 modbus_dict = {'equipment_id': group + group_code, 'meta': {'ip': host,
                                                                             'port': port,
                                                                             'ms_time': ms_time,

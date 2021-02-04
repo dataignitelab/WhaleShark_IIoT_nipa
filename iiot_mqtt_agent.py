@@ -6,7 +6,7 @@ import sys
 import redis
 from influxdb import InfluxDBClient
 import time
-import mongo_manager
+# import mongo_manager
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
                     stream=sys.stdout, level=logging.DEBUG, datefmt='%Y-%m-%d %H:%M:%S')
@@ -29,7 +29,7 @@ class Agent:
             self.influx_pwd = config_obj['iiot_server']['influxdb']['pwd']
             self.influx_db = config_obj['iiot_server']['influxdb']['db']
 
-        self.mongo_mgr = mongo_manager.MongoMgr()
+        # self.mongo_mgr = mongo_manager.MongoMgr()
     
     def connect_redis(self, host, port):
         """
@@ -112,11 +112,11 @@ class Agent:
     
         pub_time = facility_msg_json[table_name]['pub_time']
         day = pub_time.split(' ')[0]
-        pub_doc = self.mongo_mgr.document_bykey('facility', table_name, {'DAY': day})
-        if pub_doc is not None:
-            self.mongo_mgr.document_upsert('facility', table_name, day, pub_time, status='CHECK')
-        else:
-            logging.debug('Mongo exception facility:'+table_name+':DAY'+ str(day)+' NO EXIST')
+        # pub_doc = self.mongo_mgr.document_bykey('facility', table_name, {'DAY': day})
+        # if pub_doc is not None:
+        #     self.mongo_mgr.document_upsert('facility', table_name, day, pub_time, status='CHECK')
+        # else:
+        #     logging.debug('Mongo exception facility:'+table_name+':DAY'+ str(day)+' NO EXIST')
         fields['me_time'] = me_timestamp
         influx_json = [{
             'measurement': table_name,
