@@ -246,27 +246,33 @@ class AsyncServer:
                             if status == 'OK':
                                 equipment_id = modbus_udp['equipment_id']
                                 logging.debug('equipment_id:' + equipment_id)
-                                redis_fac_info = json.loads(self.redis_mgr.get('facilities_info'))
-                                if equipment_id in redis_fac_info.keys():
-                                    logging.debug('config factory message')
-                                    fac_msg = config_fac_msg(equipment_id, fac_daq, modbus_udp, redis_fac_info)
-                                    
-                                    rabbit_channel, rtn_json = self.publish_facility_msg(mqtt_con=rabbit_channel,
-                                                                                         exchange_name='facility',
-                                                                                         routing_key=equipment_id,
-                                                                                         json_body=fac_msg)
-                                    if rtn_json == json.loads(fac_msg):
-                                        logging.debug(
-                                            'mq body:' + str(json.dumps({equipment_id: fac_daq[equipment_id]})))
+                                fi_dict = self.redis_mgr.get('facilities_info')
+                                if fi_dict is not None:
+                                    logging.debug('facilities_info')
+                                    logging.debug(str(fi_dict))
+                                    redis_fac_info = json.loads(self.redis_mgr.get('facilities_info'))
+                                    if equipment_id in redis_fac_info.keys():
+                                        logging.debug('config factory message')
+                                        fac_msg = config_fac_msg(equipment_id, fac_daq, modbus_udp, redis_fac_info)
+
+                                        rabbit_channel, rtn_json = self.publish_facility_msg(mqtt_con=rabbit_channel,
+                                                                                             exchange_name='facility',
+                                                                                             routing_key=equipment_id,
+                                                                                             json_body=fac_msg)
+                                        if rtn_json == json.loads(fac_msg):
+                                            logging.debug(
+                                                'mq body:' + str(json.dumps({equipment_id: fac_daq[equipment_id]})))
+                                        else:
+                                            logging.exception("MQTT Publish Excetion:" + str(rtn_json))
+                                            raise NameError('MQTT Publish exception')
                                     else:
-                                        logging.exception("MQTT Publish Excetion:" + str(rtn_json))
-                                        raise NameError('MQTT Publish exception')
-                                
+                                        acq_message = status + packet + 'is not exist equipment_id key\r\n'
+                                        logging.debug(acq_message)
+                                        client.sendall(acq_message.encode())
+                                        continue
                                 else:
-                                    acq_message = status + packet + 'is not exist equipment_id key\r\n'
-                                    logging.debug(acq_message)
-                                    client.sendall(acq_message.encode())
-                                    continue
+                                    logging.debug('redis key facilities_info is None')
+
                             acq_message = status + packet + '\r\n'
                             logging.debug('rtn:' + acq_message)
                             client.sendall(acq_message.encode())
