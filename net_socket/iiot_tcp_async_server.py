@@ -54,6 +54,58 @@ def init_facilities_info(redis_con):
                 '0010': 'TEMPERATURE1(SV)',
                 '0011': 'OVER_TEMP'
             },
+            'TS0004': {
+                '0001': 'TS_VOLT1_(RS)',
+                '0002': 'TS_VOLT1_(ST)',
+                '0003': 'TS_VOLT1_(RT)',
+                '0004': 'TS_AMP1_(R)',
+                '0005': 'TS_AMP1_(S)',
+                '0006': 'TS_AMP1_(T)',
+                '0007': 'INNER_PRESS',
+                '0008': 'PUMP_PRESS',
+                '0009': 'TEMPERATURE1(PV)',
+                '0010': 'TEMPERATURE1(SV)',
+                '0011': 'OVER_TEMP'
+            },
+            'TS0005': {
+                '0001': 'TS_VOLT1_(RS)',
+                '0002': 'TS_VOLT1_(ST)',
+                '0003': 'TS_VOLT1_(RT)',
+                '0004': 'TS_AMP1_(R)',
+                '0005': 'TS_AMP1_(S)',
+                '0006': 'TS_AMP1_(T)',
+                '0007': 'INNER_PRESS',
+                '0008': 'PUMP_PRESS',
+                '0009': 'TEMPERATURE1(PV)',
+                '0010': 'TEMPERATURE1(SV)',
+                '0011': 'OVER_TEMP'
+            },
+            'TS0006': {
+                '0001': 'TS_VOLT1_(RS)',
+                '0002': 'TS_VOLT1_(ST)',
+                '0003': 'TS_VOLT1_(RT)',
+                '0004': 'TS_AMP1_(R)',
+                '0005': 'TS_AMP1_(S)',
+                '0006': 'TS_AMP1_(T)',
+                '0007': 'INNER_PRESS',
+                '0008': 'PUMP_PRESS',
+                '0009': 'TEMPERATURE1(PV)',
+                '0010': 'TEMPERATURE1(SV)',
+                '0011': 'OVER_TEMP'
+            },
+            'TS0007': {
+                '0001': 'TS_VOLT1_(RS)',
+                '0002': 'TS_VOLT1_(ST)',
+                '0003': 'TS_VOLT1_(RT)',
+                '0004': 'TS_AMP1_(R)',
+                '0005': 'TS_AMP1_(S)',
+                '0006': 'TS_AMP1_(T)',
+                '0007': 'INNER_PRESS',
+                '0008': 'PUMP_PRESS',
+                '0009': 'TEMPERATURE1(PV)',
+                '0010': 'TEMPERATURE1(SV)',
+                '0011': 'OVER_TEMP'
+            },
             'TS0008': {
                 '0001': 'TS_VOLT1_(RS)',
                 '0002': 'TS_VOLT1_(ST)',
@@ -250,7 +302,7 @@ class AsyncServer:
                                 if fi_dict is not None:
                                     logging.debug('facilities_info')
                                     logging.debug(str(fi_dict))
-                                    redis_fac_info = json.loads(self.redis_mgr.get('facilities_info'))
+                                    redis_fac_info = json.loads(fi_dict)
                                     if equipment_id in redis_fac_info.keys():
                                         logging.debug('config factory message')
                                         fac_msg = config_fac_msg(equipment_id, fac_daq, modbus_udp, redis_fac_info)
@@ -271,7 +323,8 @@ class AsyncServer:
                                         client.sendall(acq_message.encode())
                                         continue
                                 else:
-                                    logging.debug('redis key facilities_info is None')
+                                    logging.debug('redis key facilities_info is None, key will be reset')
+                                    init_facilities_info(self.redis_mgr.redis_con)
 
                             acq_message = status + packet + '\r\n'
                             logging.debug('rtn:' + acq_message)
