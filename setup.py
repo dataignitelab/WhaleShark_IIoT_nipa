@@ -16,7 +16,7 @@ setup(
         'certifi==2020.6.20',
         'chardet==3.0.4',
         'flake8==3.8.3',
-        'httplib2==0.18.1',
+        'httplib2==0.19.0',
         'idna==2.9',
         'influxdb==5.3.0',
         'isort==4.3.21',
