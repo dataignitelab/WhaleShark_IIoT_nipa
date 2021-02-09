@@ -99,37 +99,41 @@ class Agent:
 
     def callback_mqreceive(self, ch, method, properties, body):
         body = body.decode('utf-8')
-
-        facility_msg_json = json.loads(body)
-        logging.debug('mqreceice:%s' % (facility_msg_json))
-        table_name = list(facility_msg_json.keys())[0]
-        fields = {}
-        tags = {}
-        me_timestamp = time.time()
-        for key in facility_msg_json[table_name].keys():
-            if key != 'pub_time':
-                logging.debug('config key:' + key + 'value:' + str(facility_msg_json[table_name][key]))
-                fields[key] = float(facility_msg_json[table_name][key])
-    
-        pub_time = facility_msg_json[table_name]['pub_time']
-        # day = pub_time.split(' ')[0]
-        # pub_doc = self.mongo_mgr.document_bykey('facility', table_name, {'DAY': day})
-        # if pub_doc is not None:
-        #     self.mongo_mgr.document_upsert('facility', table_name, day, pub_time, status='CHECK')
-        # else:
-        #     logging.debug('Mongo exception facility:'+table_name+':DAY'+ str(day)+' NO EXIST')
-        fields['me_time'] = me_timestamp
-        influx_json = [{
-            'measurement': table_name,
-            'fields': fields
-        }]
         try:
-            if self.influxdb_mgr.write_points(influx_json) is True:
-                logging.debug('influx write success:' + str(influx_json))
-            else:
-                logging.debug('influx write faile:' + str(influx_json))
-        except Exception as exp:
-            print(str(exp))
+            facility_msg_json = json.loads(body)
+            logging.debug('mqreceice:%s' % (facility_msg_json))
+            table_name = list(facility_msg_json.keys())[0]
+            fields = {}
+            tags = {}
+            me_timestamp = time.time()
+            for key in facility_msg_json[table_name].keys():
+                if key != 'pub_time':
+                    logging.debug('config key:' + key + 'value:' + str(facility_msg_json[table_name][key]))
+                    fields[key] = float(facility_msg_json[table_name][key])
+
+            pub_time = facility_msg_json[table_name]['pub_time']
+            # day = pub_time.split(' ')[0]
+            # pub_doc = self.mongo_mgr.document_bykey('facility', table_name, {'DAY': day})
+            # if pub_doc is not None:
+            #     self.mongo_mgr.document_upsert('facility', table_name, day, pub_time, status='CHECK')
+            # else:
+            #     logging.debug('Mongo exception facility:'+table_name+':DAY'+ str(day)+' NO EXIST')
+            fields['me_time'] = me_timestamp
+            influx_json = [{
+                'measurement': table_name,
+                'fields': fields
+            }]
+            try:
+                if self.influxdb_mgr.write_points(influx_json) is True:
+                    logging.debug('influx write success:' + str(influx_json))
+                else:
+                    logging.debug('influx write faile:' + str(influx_json))
+            except Exception as exp:
+                print(str(exp))
+
+        except Exception as e:
+            logging.exception('callback_mqreceive exception')
+            logging.exception(str(e))
 
     def config_facility_desc(self, redis_con):
         facilities_dict = redis_con.get('facilities_info')
