@@ -305,7 +305,7 @@ class Agent:
             self.mq_channel.queue_bind(exchange='facility', queue=tx_queue)
             call_back_arg = {'measurement': tx_queue}
             try:
-                self.mq_channel.basic_consume(tx_queue, on_message_callback=self.callback_mqreceive)
+                self.mq_channel.basic_consume(tx_queue, on_message_callback=self.callback_mqreceive, auto_ack=True)
             except Exception as exp:
                 logging.error(str(exp))
 
