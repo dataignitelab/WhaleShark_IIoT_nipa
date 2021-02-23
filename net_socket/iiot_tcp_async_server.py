@@ -225,7 +225,7 @@ class AsyncServer:
                 fv = '0x{:02x}'.format(byte_tuple[13]) + '{:02x}'.format(byte_tuple[14]) + '{:02x}'.format(
                     byte_tuple[15]) + '{:02x}'.format(byte_tuple[16])
                 decimal_point = int('0x{:02x}'.format(byte_tuple[17]), 16)
-                logging.debug('**8Byte pressure:' + str(sensor_code) + ':' + fv)
+                logging.debug('**4Byte Function Value:' + str(sensor_code) + ':' + fv)
                 fv = int(fv, 16)
                 
                 ms_time = time.time()
