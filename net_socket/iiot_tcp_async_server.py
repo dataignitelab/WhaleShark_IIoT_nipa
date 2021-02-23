@@ -127,8 +127,11 @@ def get_fac_inf(redis_con):
     fac_daq = {}
     facilities_binary = redis_con.get('facilities_info')
     if facilities_binary is None:
+        logging.debug('redis facility info is None\nreset facility info')
         init_facilities_info(redis_con)
-    
+        facilities_binary = redis_con.get('facilities_info')
+
+    logging.debug('redis facility info decoding..')
     facilities_decoded = facilities_binary.decode()
     facilities_info = json.loads(facilities_decoded)
     equipment_keys = facilities_info.keys()
