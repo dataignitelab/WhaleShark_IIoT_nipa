@@ -124,10 +124,11 @@ class Agent:
                 'fields': fields
             }]
             try:
-                if self.influxdb_mgr.write_points(influx_json) is True:
-                    logging.debug('influx write success:' + str(influx_json))
-                else:
-                    logging.debug('influx write faile:' + str(influx_json))
+                pass
+                # if self.influxdb_mgr.write_points(influx_json) is True:
+                #     logging.debug('influx write success:' + str(influx_json))
+                # else:
+                #     logging.debug('influx write faile:' + str(influx_json))
             except Exception as exp:
                 print(str(exp))
 
@@ -302,6 +303,7 @@ class Agent:
         for facility_id in facilities_dict.keys():
             result = self.mq_channel.queue_declare(queue=facility_id, exclusive=True)
             tx_queue = result.method.queue
+            logging.debug('Queue bind exchange: %s queue %s'%('facility', facility_id))
             self.mq_channel.queue_bind(exchange='facility', queue=tx_queue)
             call_back_arg = {'measurement': tx_queue}
             try:

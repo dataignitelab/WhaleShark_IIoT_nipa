@@ -254,7 +254,7 @@ class TcpServer:
             param = pika.ConnectionParameters(address, port, '/', credentials)
             connection = pika.BlockingConnection(param)
             channel = connection.channel()
-            channel.exchange_declare(exchange='facility', exchange_type='fanout')
+            channel.exchange_declare(exchange='facility', exchange_type=self.exchange_type)
         except Exception as e:
             logging.exception(str(e))
 
@@ -298,7 +298,7 @@ if __name__ == '__main__':
         async_server = AsyncServer(redis_mgr)
         event_manger = asyncio.get_event_loop()
         event_manger.run_until_complete(
-            async_server.get_client(event_manger, server_socket, msg_size, rabbit_channel))
+            async_server.get_client(event_manger, server_socket, msg_size, rabbit_channel, server.exchange_type))
 
     except Exception as e:
         print(str(e))

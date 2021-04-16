@@ -5,7 +5,7 @@ import json
 import time
 from datetime import datetime
 import pika
-# import mongo_manager
+
 from net_socket.signal_killer import GracefulInterruptHandler
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', stream=sys.stdout, level=logging.DEBUG,
@@ -167,7 +167,7 @@ class AsyncServer:
     def convert(self, packet_list):
         return tuple(i for i in packet_list)
     
-    def publish_facility_msg(self, mqtt_con, exchange_name, routing_key, json_body):
+    def publish_facility_msg(self, mqtt_con, exchange_name, routing_key, json_body, exchange_type):
         try:
             logging.debug('exchange name:' + exchange_name + ' routing key:' + routing_key)
             logging.debug('channel is open:' + str(mqtt_con.is_open))
@@ -176,9 +176,12 @@ class AsyncServer:
                 param = pika.ConnectionParameters('localhost', 5672, '/', credentials)
                 connection = pika.BlockingConnection(param)
                 mqtt_con = connection.channel()
-                mqtt_con.queue_declare(queue=exchange_name)
-                mqtt_con.exchange_declare(exchange='facility', exchange_type='fanout')
-            
+                try:
+                    mqtt_con.queue_declare(queue=routing_key)
+                    mqtt_con.exchange_declare(exchange=exchange_name, exchange_type=exchange_type)
+                except Exception as e:
+                    logging.exception(str(e))
+
             mqtt_con.basic_publish(exchange=exchange_name, routing_key=routing_key, body=json_body)
             return mqtt_con, json.loads(json_body)
         
@@ -254,7 +257,7 @@ class AsyncServer:
         logging.debug(status + str(packet_bytes) + str(modbus_dict))
         return status, str(packet_bytes), modbus_dict
     
-    async def get_client(self, event_manger, server_sock, msg_size, rabbit_channel):
+    async def get_client(self, event_manger, server_sock, msg_size, rabbit_channel, exchange_type):
         """
         It create client socket with server sockt
         event_manger        It has asyncio event loop
@@ -267,13 +270,13 @@ class AsyncServer:
             while True:
                 if not h.interrupted:
                     client, _ = await event_manger.sock_accept(server_sock)
-                    event_manger.create_task(self.manage_client(event_manger, client, msg_size, rabbit_channel))
+                    event_manger.create_task(self.manage_client(event_manger, client, msg_size, rabbit_channel,exchange_type))
                 else:
                     client.close()
                     server_sock.close()
                     sys.exit(0)
     
-    async def manage_client(self, event_manger, client, msg_size, rabbit_channel):
+    async def manage_client(self, event_manger, client, msg_size, rabbit_channel, exchange_type):
         """
             It receives modbus data from iiot gateway using client socket.
             event_manger        It has asyncio event loop
@@ -313,7 +316,8 @@ class AsyncServer:
                                         rabbit_channel, rtn_json = self.publish_facility_msg(mqtt_con=rabbit_channel,
                                                                                              exchange_name='facility',
                                                                                              routing_key=equipment_id,
-                                                                                             json_body=fac_msg)
+                                                                                             json_body=fac_msg,
+                                                                                             exchange_type=exchange_type)
                                         if rtn_json == json.loads(fac_msg):
                                             logging.debug(
                                                 'mq body:' + str(json.dumps({equipment_id: fac_daq[equipment_id]})))
