@@ -124,11 +124,10 @@ class Agent:
                 'fields': fields
             }]
             try:
-                pass
-                # if self.influxdb_mgr.write_points(influx_json) is True:
-                #     logging.debug('influx write success:' + str(influx_json))
-                # else:
-                #     logging.debug('influx write faile:' + str(influx_json))
+                if self.influxdb_mgr.write_points(influx_json) is True:
+                    logging.debug('influx write success:' + str(influx_json))
+                else:
+                    logging.debug('influx write faile:' + str(influx_json))
             except Exception as exp:
                 print(str(exp))
 
