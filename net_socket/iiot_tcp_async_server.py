@@ -216,7 +216,7 @@ class AsyncServer:
         try:
             byte_tuple = self.convert(list(packet_bytes))
             logging.debug('byte message')
-            logging.debug('1[' + packet_bytes+ ']')
+            logging.debug('1[' + str(packet_bytes)+ ']')
             logging.debug('2['+str(byte_tuple)+']')
             if byte_tuple[0] == 2 and (byte_tuple[16] == 3 or byte_tuple[18] == 3):
                 group = chr(byte_tuple[5]) + chr(byte_tuple[6])
