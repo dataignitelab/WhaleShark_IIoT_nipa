@@ -215,7 +215,8 @@ class AsyncServer:
                                                     }}
         try:
             byte_tuple = self.convert(list(packet_bytes))
-            logging.debug('byte message\r\n' + str(byte_tuple))
+            logging.debug('byte message')
+            logging.debug('['+str(byte_tuple)+']')
             if byte_tuple[0] == 2 and (byte_tuple[16] == 3 or byte_tuple[18] == 3):
                 group = chr(byte_tuple[5]) + chr(byte_tuple[6])
                 group_code = int('0x{:02x}'.format(byte_tuple[7]) + '{:02x}'.format(byte_tuple[8]), 16)
