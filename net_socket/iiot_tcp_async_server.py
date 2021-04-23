@@ -333,7 +333,7 @@ class AsyncServer:
                                         continue
                                 else:
                                     logging.debug('redis key facilities_info is None, key will be reset')
-                                    init_facilities_info(self.redis_mgr.redis_con)
+                                    init_facilities_info(self.redis_mgr)
 
                             acq_message = status + packet + '\r\n'
                             logging.debug('rtn:' + acq_message)
