@@ -26,7 +26,9 @@ def init_facilities_info(redis_con):
                 '0008': 'PUMP_PRESS',
                 '0009': 'TEMPERATURE1(PV)',
                 '0010': 'TEMPERATURE1(SV)',
-                '0011': 'OVER_TEMP'
+                '0011': 'OVER_TEMP',
+                '0012': 'Nitrogen',
+                '0013': 'Argon'
             },
             'TS0002': {
                 '0001': 'TS_VOLT1_(RS)',
@@ -141,6 +143,7 @@ def get_fac_inf(redis_con):
             sensor_desc = facilities_info[equipment_key][sensor_id]
             if sensor_desc not in fac_daq[equipment_key].keys():
                 fac_daq[equipment_key][sensor_desc] = 0.0
+    logging.debug(fac_daq)
     return fac_daq
 
 
