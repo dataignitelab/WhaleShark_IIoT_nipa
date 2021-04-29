@@ -151,7 +151,8 @@ class Agent:
                         '0008': 'PUMP_PRESS',
                         '0009': 'TEMPERATURE1(PV)',
                         '0010': 'TEMPERATURE1(SV)',
-                        '0011': 'OVER_TEMP'
+                        '0012': 'Nitrogen',
+                        '0013': 'Argon'
                     },
                 'TS0002':
                     {
