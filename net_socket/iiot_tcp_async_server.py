@@ -98,9 +98,9 @@ def init_facilities_info(redis_con):
         }
     redis_con.set('facilities_info', json.dumps(facilities_dict))
 
+fac_daq = dict()
 
-def get_fac_inf(redis_con):
-    fac_daq = {}
+def get_fac_inf(redis_con, modbus_udp):
     facilities_binary = redis_con.get('facilities_info')
     if facilities_binary is None:
         logging.debug('redis facility info is None\nreset facility info')
@@ -111,13 +111,21 @@ def get_fac_inf(redis_con):
     facilities_decoded = facilities_binary.decode()
     facilities_info = json.loads(facilities_decoded)
     equipment_keys = facilities_info.keys()
+
     for equipment_key in equipment_keys:
-        fac_daq[equipment_key] = {}
-        for sensor_id in facilities_info[equipment_key].keys():
-            sensor_desc = facilities_info[equipment_key][sensor_id]
-            if sensor_desc not in fac_daq[equipment_key].keys():
-                fac_daq[equipment_key][sensor_desc] = 0.0
-    logging.debug(fac_daq)
+
+        if equipment_key not in fac_daq:
+            fac_daq[equipment_key] = {}
+
+            for sensor_id in facilities_info[equipment_key].keys():
+                sensor_desc = facilities_info[equipment_key][sensor_id]
+                if sensor_desc not in fac_daq[equipment_key].keys():
+                    fac_daq[equipment_key][sensor_desc] = 0.0
+        else:
+            if equipment_key == modbus_udp['equipment_id']:
+                sensor_id = modbus_udp['meta']['sensor_cd']
+                fac_daq[equipment_key][sensor_id] = modbus_udp['meta']['sensor_value']
+
     return fac_daq
 
 
@@ -264,7 +272,6 @@ class AsyncServer:
             msg_queue           It means the queue containing the message transmitted from the gateway.
         """
 
-        fac_daq = get_fac_inf(self.redis_mgr)
         with GracefulInterruptHandler() as h:
             while True:
                 if not h.interrupted:
@@ -280,6 +287,7 @@ class AsyncServer:
                             logging.debug('try convert')
                             host, port = client.getpeername()
                             status, packet, modbus_udp = self.convert_hex2decimal(packet, host, port)
+                            fac_daq = get_fac_inf(self.redis_mgr, modbus_udp)
                             if status == 'OK':
                                 equipment_id = modbus_udp['equipment_id']
                                 logging.debug('equipment_id:' + equipment_id)
