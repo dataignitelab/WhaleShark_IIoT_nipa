@@ -97,18 +97,18 @@ def init_facilities_info(redis_con):
                 },
                 'TK0001':
                     {
-                        '0001': 'TS_VOLT1_(RS)',
-                        '0002': 'TS_VOLT1_(ST)',
-                        '0003': 'TS_VOLT1_(RT)',
-                        '0004': 'TS_AMP1_(R)',
-                        '0005': 'TS_AMP1_(S)',
-                        '0006': 'TS_AMP1_(T)',
-                        '0007': 'TS_VOLT2_(RS)',
-                        '0008': 'TS_VOLT2_(ST)',
-                        '0009': 'TS_VOLT2_(RT)',
-                        '0010': 'TS_AMP2_(R)',
-                        '0011': 'TS_AMP2_(S)',
-                        '0012': 'TS_AMP2_(T)',
+                        '0001': 'TK_VOLT1_(RS)',
+                        '0002': 'TK_VOLT1_(ST)',
+                        '0003': 'TK_VOLT1_(RT)',
+                        '0004': 'TK_AMP1_(R)',
+                        '0005': 'TK_AMP1_(S)',
+                        '0006': 'TK_AMP1_(T)',
+                        '0007': 'TK_VOLT2_(RS)',
+                        '0008': 'TK_VOLT2_(ST)',
+                        '0009': 'TK_VOLT2_(RT)',
+                        '0010': 'TK_AMP2_(R)',
+                        '0011': 'TK_AMP2_(S)',
+                        '0012': 'TK_AMP2_(T)',
                         '0013': 'INNER_PRESS',
                         '0014': 'PUMP_PRESS',
                         '0015': 'TEMPERATURE1(PV)',
@@ -116,23 +116,25 @@ def init_facilities_info(redis_con):
                         '0017': 'TEMPERATURE2(PV)',
                         '0018': 'TEMPERATURE2(SV)',
                         '0019': 'OVER_TEMP',
-                        '0020': 'Nitrogen',
-                        '0021': 'Argon'
+                        '0020': 'INNER_PRESS2',
+                        '0021': 'PUMP_PRESS2',
+                        '0022': 'Nitrogen',
+                        '0023': 'Argon'
                     },
                 'TK0002':
                     {
-                        '0001': 'TS_VOLT1_(RS)',
-                        '0002': 'TS_VOLT1_(ST)',
-                        '0003': 'TS_VOLT1_(RT)',
-                        '0004': 'TS_AMP1_(R)',
-                        '0005': 'TS_AMP1_(S)',
-                        '0006': 'TS_AMP1_(T)',
-                        '0007': 'TS_VOLT2_(RS)',
-                        '0008': 'TS_VOLT2_(ST)',
-                        '0009': 'TS_VOLT2_(RT)',
-                        '0010': 'TS_AMP2_(R)',
-                        '0011': 'TS_AMP2_(S)',
-                        '0012': 'TS_AMP2_(T)',
+                        '0001': 'TK_VOLT1_(RS)',
+                        '0002': 'TK_VOLT1_(ST)',
+                        '0003': 'TK_VOLT1_(RT)',
+                        '0004': 'TK_AMP1_(R)',
+                        '0005': 'TK_AMP1_(S)',
+                        '0006': 'TK_AMP1_(T)',
+                        '0007': 'TK_VOLT2_(RS)',
+                        '0008': 'TK_VOLT2_(ST)',
+                        '0009': 'TK_VOLT2_(RT)',
+                        '0010': 'TK_AMP2_(R)',
+                        '0011': 'TK_AMP2_(S)',
+                        '0012': 'TK_AMP2_(T)',
                         '0013': 'INNER_PRESS',
                         '0014': 'PUMP_PRESS',
                         '0015': 'TEMPERATURE1(PV)',
@@ -140,23 +142,25 @@ def init_facilities_info(redis_con):
                         '0017': 'TEMPERATURE2(PV)',
                         '0018': 'TEMPERATURE2(SV)',
                         '0019': 'OVER_TEMP',
-                        '0020': 'Nitrogen',
-                        '0021': 'Argon'
+                        '0020': 'INNER_PRESS2',
+                        '0021': 'PUMP_PRESS2',
+                        '0022': 'Nitrogen',
+                        '0023': 'Argon'
                     },
                 'TK0003':
                     {
-                        '0001': 'TS_VOLT1_(RS)',
-                        '0002': 'TS_VOLT1_(ST)',
-                        '0003': 'TS_VOLT1_(RT)',
-                        '0004': 'TS_AMP1_(R)',
-                        '0005': 'TS_AMP1_(S)',
-                        '0006': 'TS_AMP1_(T)',
-                        '0007': 'TS_VOLT2_(RS)',
-                        '0008': 'TS_VOLT2_(ST)',
-                        '0009': 'TS_VOLT2_(RT)',
-                        '0010': 'TS_AMP2_(R)',
-                        '0011': 'TS_AMP2_(S)',
-                        '0012': 'TS_AMP2_(T)',
+                        '0001': 'TK_VOLT1_(RS)',
+                        '0002': 'TK_VOLT1_(ST)',
+                        '0003': 'TK_VOLT1_(RT)',
+                        '0004': 'TK_AMP1_(R)',
+                        '0005': 'TK_AMP1_(S)',
+                        '0006': 'TK_AMP1_(T)',
+                        '0007': 'TK_VOLT2_(RS)',
+                        '0008': 'TK_VOLT2_(ST)',
+                        '0009': 'TK_VOLT2_(RT)',
+                        '0010': 'TK_AMP2_(R)',
+                        '0011': 'TK_AMP2_(S)',
+                        '0012': 'TK_AMP2_(T)',
                         '0013': 'INNER_PRESS',
                         '0014': 'PUMP_PRESS',
                         '0015': 'TEMPERATURE1(PV)',
@@ -164,23 +168,25 @@ def init_facilities_info(redis_con):
                         '0017': 'TEMPERATURE2(PV)',
                         '0018': 'TEMPERATURE2(SV)',
                         '0019': 'OVER_TEMP',
-                        '0020': 'Nitrogen',
-                        '0021': 'Argon'
+                        '0020': 'INNER_PRESS2',
+                        '0021': 'PUMP_PRESS2',
+                        '0022': 'Nitrogen',
+                        '0023': 'Argon'
                     },
                 'TK0004':
                     {
-                        '0001': 'TS_VOLT1_(RS)',
-                        '0002': 'TS_VOLT1_(ST)',
-                        '0003': 'TS_VOLT1_(RT)',
-                        '0004': 'TS_AMP1_(R)',
-                        '0005': 'TS_AMP1_(S)',
-                        '0006': 'TS_AMP1_(T)',
-                        '0007': 'TS_VOLT2_(RS)',
-                        '0008': 'TS_VOLT2_(ST)',
-                        '0009': 'TS_VOLT2_(RT)',
-                        '0010': 'TS_AMP2_(R)',
-                        '0011': 'TS_AMP2_(S)',
-                        '0012': 'TS_AMP2_(T)',
+                        '0001': 'TK_VOLT1_(RS)',
+                        '0002': 'TK_VOLT1_(ST)',
+                        '0003': 'TK_VOLT1_(RT)',
+                        '0004': 'TK_AMP1_(R)',
+                        '0005': 'TK_AMP1_(S)',
+                        '0006': 'TK_AMP1_(T)',
+                        '0007': 'TK_VOLT2_(RS)',
+                        '0008': 'TK_VOLT2_(ST)',
+                        '0009': 'TK_VOLT2_(RT)',
+                        '0010': 'TK_AMP2_(R)',
+                        '0011': 'TK_AMP2_(S)',
+                        '0012': 'TK_AMP2_(T)',
                         '0013': 'INNER_PRESS',
                         '0014': 'PUMP_PRESS',
                         '0015': 'TEMPERATURE1(PV)',
@@ -188,8 +194,10 @@ def init_facilities_info(redis_con):
                         '0017': 'TEMPERATURE2(PV)',
                         '0018': 'TEMPERATURE2(SV)',
                         '0019': 'OVER_TEMP',
-                        '0020': 'Nitrogen',
-                        '0021': 'Argon'
+                        '0020': 'INNER_PRESS2',
+                        '0021': 'PUMP_PRESS2',
+                        '0022': 'Nitrogen',
+                        '0023': 'Argon'
                     }
         }
     redis_con.set('facilities_info', json.dumps(facilities_dict))
@@ -220,8 +228,9 @@ def get_fac_inf(redis_con, modbus_udp):
         else:
             if equipment_key == modbus_udp['equipment_id']:
                 sensor_id = modbus_udp['meta']['sensor_cd']
-                fac_daq[equipment_key][sensor_id] = modbus_udp['meta']['sensor_value']
 
+                fac_daq[equipment_key][sensor_id] = modbus_udp['meta']['sensor_value']
+                logging.debug(fac_daq)
     return fac_daq
 
 
@@ -389,8 +398,6 @@ class AsyncServer:
                                 logging.debug('equipment_id:' + equipment_id)
                                 fi_dict = self.redis_mgr.get('facilities_info')
                                 if fi_dict is not None:
-                                    logging.debug('facilities_info')
-                                    logging.debug(str(fi_dict))
                                     redis_fac_info = json.loads(fi_dict)
                                     if equipment_id in redis_fac_info.keys():
                                         logging.debug('config factory message')
