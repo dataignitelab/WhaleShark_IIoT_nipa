@@ -228,9 +228,8 @@ def get_fac_inf(redis_con, modbus_udp):
         else:
             if equipment_key == modbus_udp['equipment_id']:
                 sensor_id = modbus_udp['meta']['sensor_cd']
-
-                fac_daq[equipment_key][sensor_id] = modbus_udp['meta']['sensor_value']
-                logging.debug(fac_daq)
+                sensor_desc = facilities_info[equipment_key][sensor_id]
+                fac_daq[equipment_key][sensor_desc] = modbus_udp['meta']['sensor_value']
     return fac_daq
 
 
