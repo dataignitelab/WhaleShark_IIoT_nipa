@@ -16,7 +16,7 @@
 #include <network/networkmanager.h>
 
 #define PLC_DATA_LEN	79
-#define PLC_BUFF_SIZE	512
+#define PLC_BUFF_SIZE	128
 #define PV				"PV" //PV
 #define TS				"TS"
 #define TK				"TK"
@@ -26,6 +26,7 @@
 #define PV_LEN			2
 #define TB_VALUE_LEN	2	//2 bytes value len
 #define FB_VALUE_LEN	4	//4 bytes value len
+#define PLC_COMMUNICATION_TIMEOUT	60000
 
 //Sensor Code
 #define SensorCode_1	0x0001
@@ -48,46 +49,60 @@
 #define SensorCode_18	0x0012
 #define SensorCode_19	0x0013
 
-typedef struct dustCommInfo_tag {
-	MqData_t mqData;
+typedef struct _PlcCommInfo{
+	rt_event_t rxEvent;
+	rt_timer_t plcCommTimeoutTimer;
 
-	rt_device_t uport;
-	rt_event_t  rx_event;
-
-	rt_uint8_t tcpOn; //tcp connection flag
+	rt_uint8_t receiveOn; //Receive On Flag
 	rt_uint8_t devInfo[4];
 	rt_uint8_t devType; //0: TS, 1: TK
-	PlDataInfo plDataInfo;
-	rt_uint8_t txBuf[PLC_BUFF_SIZE];
+	rt_uint8_t valid;
+	rt_uint8_t txBuf[PLC_BUFF_SIZE>>2];
 	rt_uint8_t rxBuf[PLC_BUFF_SIZE];
 } PlcCommInfo;
 
-static PlcCommInfo plcCommInfo;
+PlcCommInfo plcCommInfo;
 static rt_uint8_t findStart = DISABLE;
 static rt_uint16_t sensorCodeCount = 1;
 
-//Get Tcp flag
-rt_uint8_t GetTcpStatus(void)
+void PlcCommTimeoutTimer(void *params)
 {
-	return plcCommInfo.tcpOn;
+	DeviceReboot();
 }
-//Set Tcp flag
-void SetTcpStatus(rt_uint8_t tcpOn)
+
+//Set Receive On
+void SetReceiveOn(rt_uint8_t receiveOn)
 {
-	if(tcpOn != plcCommInfo.tcpOn)
+	rt_kprintf("PLC Data Receive %s\r\n", (ENABLE == receiveOn)?"On":"Off");
+	if(receiveOn != plcCommInfo.receiveOn)
 	{
-		plcCommInfo.tcpOn = tcpOn;
+		plcCommInfo.receiveOn = receiveOn;
 	}
 }
 
 void SetSendEvent(void)
 {
-    rt_event_send(plcCommInfo.rx_event, SMSG_INC_DATA);
+	if((DEV_TYPE_TS == plcCommInfo.devType) && (SensorCode_11 < sensorCodeCount))
+	{
+		sensorCodeCount = 1;
+	}
+	else if((DEV_TYPE_TK == plcCommInfo.devType) && (SensorCode_19 < sensorCodeCount))
+	{
+		sensorCodeCount = 1;
+	}
+
+	if(1 == sensorCodeCount)
+	{
+		rt_timer_stop(plcCommInfo.plcCommTimeoutTimer);
+		rt_memset(plcCommInfo.rxBuf,'\0',PLC_BUFF_SIZE);
+	}
+
+	rt_event_send(plcCommInfo.rxEvent, SMSG_INC_DATA);
 }
 
-static rt_err_t plccomm_rx_ind(rt_device_t dev, rt_size_t size)
+static rt_err_t plcCommRxInd(rt_device_t dev, rt_size_t size)
 {
-    return rt_event_send(plcCommInfo.rx_event, SMSG_RX_DATA);
+	return rt_event_send(plcCommInfo.rxEvent, SMSG_RX_DATA);
 }
 
 //Make Packet following Protocol
@@ -329,7 +344,7 @@ rt_uint8_t CalSum(rt_uint8_t *pData, rt_uint8_t len)
 	return result;
 }
 
-static rt_size_t ParserReceiveData(rt_uint8_t *p_base, rt_size_t rx_size, PlDataInfo *plDataInfo)
+static rt_size_t ParserReceiveData(rt_uint8_t *p_base, rt_size_t rx_size)
 {
 	rt_size_t consumed = 0;
 
@@ -349,7 +364,7 @@ static rt_size_t ParserReceiveData(rt_uint8_t *p_base, rt_size_t rx_size, PlData
 				rt_uint8_t sum = *(begin+PLC_DATA_LEN-1);
 				if( sum == CalSum(begin,PLC_DATA_LEN-1))
 				{
-					plDataInfo->valid = ENABLE;
+					plcCommInfo.valid = ENABLE;
 #if 0//For monitoring PLC Data
 					for(rt_uint8_t i = 0; i < PLC_DATA_LEN; i++ )
 					{
@@ -366,30 +381,32 @@ static rt_size_t ParserReceiveData(rt_uint8_t *p_base, rt_size_t rx_size, PlData
 	return consumed;
 }
 
-static void plccomm_rx_thread(void *params)
+static void PlcCommRxThread(void *params)
 {
     PlcCommInfo *p_handle = (PlcCommInfo *)params;
 	rt_uint8_t *pBuf = p_handle->rxBuf;	
-	rt_size_t uRemain = 0;
+	rt_device_t uport = RT_NULL;
 	rt_uint32_t events;
+	rt_uint8_t uRemain = 0;
+	rt_size_t consumed = 0;
 	rt_uint8_t indFlag = DISABLE;
+
+	uport = rt_device_find(UART2_DEV_NAME);
+	RT_ASSERT(uport != RT_NULL);
 
 	struct serial_configure config = RT_SERIAL_CONFIG_DEFAULT;
 
 	config.baud_rate = BAUD_RATE_19200;
-	rt_err_t err = rt_device_control(p_handle->uport, RT_DEVICE_CTRL_CONFIG, (void *)&config);
-	RT_ASSERT(err == RT_EOK);
+	rt_device_control(uport, RT_DEVICE_CTRL_CONFIG, (void *)&config);
 
-    err = rt_device_open(p_handle->uport, RT_DEVICE_OFLAG_RDONLY | RT_DEVICE_FLAG_INT_RX);
-	RT_ASSERT(err == RT_EOK);
+    rt_device_open(uport, RT_DEVICE_OFLAG_RDONLY |RT_DEVICE_FLAG_INT_RX);
 
-	rt_device_set_rx_indicate(p_handle->uport, plccomm_rx_ind);
+	rt_device_set_rx_indicate(uport, plcCommRxInd);
 	while(1)
 	{	
-		if(RT_EOK == (err=rt_event_recv(p_handle->rx_event, (SMSG_RX_DATA|SMSG_INC_DATA), (RT_EVENT_FLAG_OR|RT_EVENT_FLAG_CLEAR), RT_WAITING_FOREVER, &events))
-			&& (ENABLE == p_handle->tcpOn))
+		if(RT_EOK == (rt_event_recv(p_handle->rxEvent, (SMSG_RX_DATA|SMSG_INC_DATA), (RT_EVENT_FLAG_OR|RT_EVENT_FLAG_CLEAR), RT_WAITING_FOREVER, &events)) && (ENABLE == p_handle->receiveOn))
 		{
-			rt_size_t ulBytes;
+			rt_uint8_t ulBytes;
 
 			if((SMSG_RX_DATA & events) && (1 == sensorCodeCount))
 			{
@@ -399,9 +416,9 @@ static void plccomm_rx_thread(void *params)
 				}
 
 				do {
-					if((ulBytes=rt_device_read(p_handle->uport, 0, (pBuf+uRemain), (PLC_BUFF_SIZE-uRemain))) > 0)
+					if((ulBytes=rt_device_read(uport, 0, (pBuf+uRemain), (PLC_BUFF_SIZE-uRemain))) > 0)
 					{
-						rt_size_t consumed = ParserReceiveData(pBuf, (uRemain += ulBytes), &p_handle->plDataInfo);
+						consumed = ParserReceiveData(pBuf, (uRemain += ulBytes));
 
 						if(consumed > 0 && ((uRemain -= consumed) > 0))
 						{
@@ -410,10 +427,10 @@ static void plccomm_rx_thread(void *params)
 					}
 				} while(0 < ulBytes);
 
-				if(ENABLE == p_handle->plDataInfo.valid)
+				if(ENABLE == p_handle->valid)
 				{
-					//rt_kprintf("Received the Sensor Data \r\n");
-					p_handle->plDataInfo.valid = DISABLE;
+					rt_timer_start(p_handle->plcCommTimeoutTimer);
+					p_handle->valid = DISABLE;
 					indFlag = ENABLE;
 				}
 			}
@@ -433,19 +450,6 @@ static void plccomm_rx_thread(void *params)
 
 				sensorCodeCount++;
 
-				if((DEV_TYPE_TS == plcCommInfo.devType) && (SensorCode_11 < sensorCodeCount))
-				{
-					sensorCodeCount = 1;
-				}
-				else if((DEV_TYPE_TK == plcCommInfo.devType) && (SensorCode_19 < sensorCodeCount))
-				{
-					sensorCodeCount = 1;
-				}
-
-				if(1 == sensorCodeCount)
-				{
-					rt_memset(p_handle->rxBuf,'\0',PLC_BUFF_SIZE);
-				}
 				indFlag = DISABLE;
 			}
 		}
@@ -455,12 +459,8 @@ static void plccomm_rx_thread(void *params)
 void InitPlcCommInfo(rt_uint8_t *pData)
 {
 	rt_uint16_t devNum = 0;
-	plcCommInfo.tcpOn = DISABLE;
-
-	plcCommInfo.uport = RT_NULL;
-	plcCommInfo.rx_event = RT_NULL;
-
-	rt_memset(&plcCommInfo.plDataInfo, 0, sizeof(plcCommInfo.plDataInfo));
+	plcCommInfo.receiveOn = DISABLE;
+	plcCommInfo.valid = DISABLE;
 
 	rt_memcpy(plcCommInfo.devInfo,pData,sizeof(devNum));
 	devNum = strtoul((char *)pData+2,0,10);
@@ -486,19 +486,19 @@ rt_bool_t InitPlcComm(void)
 {
 	rt_kprintf("Initialize PlcComm.\r\n");
     PlcCommInfo *h_data = &plcCommInfo;
-    rt_thread_t tid_rx;
+	rt_thread_t tidRx;
 
     InitPlcCommInfo(GetDeviceInfo());
 
-    h_data->uport = rt_device_find(UART2_DEV_NAME);
-    RT_ASSERT(h_data->uport != RT_NULL);
+    h_data->rxEvent = rt_event_create("plccommRx", RT_IPC_FLAG_FIFO);
+    RT_ASSERT(h_data->rxEvent != RT_NULL);
 
-    h_data->rx_event = rt_event_create("plccomm_rx", RT_IPC_FLAG_FIFO);
-    RT_ASSERT(h_data->rx_event != RT_NULL);
+    h_data->plcCommTimeoutTimer = rt_timer_create("plcCommTimeoutTimer", PlcCommTimeoutTimer, RT_NULL, rt_tick_from_millisecond(PLC_COMMUNICATION_TIMEOUT), RT_TIMER_FLAG_ONE_SHOT);;
+    RT_ASSERT(h_data->plcCommTimeoutTimer != RT_NULL);
 
-    tid_rx = rt_thread_create("plccomm_rx_thread", plccomm_rx_thread, (void *)h_data, PLCCOMMM_STACK_SIZE, RT_MAIN_THREAD_PRIORITY, 20);
-    RT_ASSERT(tid_rx != RT_NULL);
+    tidRx = rt_thread_create("plcCommRxThread", PlcCommRxThread, (void *)h_data, PLCCOMMM_STACK_SIZE, RT_MAIN_THREAD_PRIORITY, 20);
+    RT_ASSERT(tidRx != RT_NULL);
 
     /* thread start  */
-    return (RT_EOK == rt_thread_startup(tid_rx));
+    return (RT_EOK == rt_thread_startup(tidRx));
 }

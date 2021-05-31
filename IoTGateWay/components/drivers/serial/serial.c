@@ -24,6 +24,7 @@
  * 2018-12-08     Ernest Chen  add DMA choice
  * 2020-09-14     WillianChan  add a line feed to the carriage return character
  *                             when using interrupt tx
+ * 2020-12-14     Meco Man     add function of setting window's size(TIOCSWINSZ)
  */
 
 #include <rthw.h>
@@ -221,7 +222,10 @@ rt_inline int _serial_poll_rx(struct rt_serial_device *serial, rt_uint8_t *data,
         *data = ch;
         data ++; length --;
 
-        if (ch == '\n') break;
+        if(serial->parent.open_flag & RT_DEVICE_FLAG_STREAM)
+        {
+            if (ch == '\n') break;
+        }
     }
 
     return size - length;
@@ -317,19 +321,6 @@ rt_inline int _serial_int_tx(struct rt_serial_device *serial, const rt_uint8_t *
 
     while (length)
     {
-        /*
-         * to be polite with serial console add a line feed
-         * to the carriage return character
-         */
-        if (*data == '\n' && (serial->parent.open_flag & RT_DEVICE_FLAG_STREAM))
-        {
-            if (serial->ops->putc(serial, '\r') == -1)
-            {
-                rt_completion_wait(&(tx->completion), RT_WAITING_FOREVER);
-                continue;
-            }
-        }
-
         if (serial->ops->putc(serial, *(char*)data) == -1)
         {
             rt_completion_wait(&(tx->completion), RT_WAITING_FOREVER);
@@ -1009,7 +1000,7 @@ static rt_err_t rt_serial_control(struct rt_device *dev,
             }
 
             break;
-
+#ifdef RT_USING_POSIX
 #ifdef RT_USING_POSIX_TERMIOS
         case TCGETA:
             {
@@ -1101,8 +1092,17 @@ static rt_err_t rt_serial_control(struct rt_device *dev,
             break;
         case TCXONC:
             break;
-#endif
-#ifdef RT_USING_POSIX
+        case TIOCSWINSZ:
+            {
+                struct winsize* p_winsize;
+
+                p_winsize = (struct winsize*)args;
+                rt_enter_critical();
+                rt_kprintf("\x1b[8;%d;%dt", p_winsize->ws_col, p_winsize->ws_row);
+                rt_exit_critical();
+            }
+            break;
+#endif /*RT_USING_POSIX_TERMIOS*/
         case FIONREAD:
             {
                 rt_size_t recved = 0;
@@ -1115,7 +1115,7 @@ static rt_err_t rt_serial_control(struct rt_device *dev,
                 *(rt_size_t *)args = recved;
             }
             break;
-#endif
+#endif /*RT_USING_POSIX*/
         default :
             /* control device */
             ret = serial->ops->control(serial, cmd, args);
@@ -1257,7 +1257,7 @@ void rt_hw_serial_isr(struct rt_serial_device *serial, int event)
             tx_dma = (struct rt_serial_tx_dma*) serial->serial_tx;
 
             rt_data_queue_pop(&(tx_dma->data_queue), &last_data_ptr, &data_size, 0);
-            if (rt_data_queue_peak(&(tx_dma->data_queue), &data_ptr, &data_size) == RT_EOK)
+            if (rt_data_queue_peek(&(tx_dma->data_queue), &data_ptr, &data_size) == RT_EOK)
             {
                 /* transmit next data node */
                 tx_dma->activated = RT_TRUE;

@@ -85,7 +85,6 @@
 #define BSP_USING_UART
 #define BSP_USING_UART2
 #define BSP_USING_UART3
-#define BSP_USING_UART5
 #define BSP_USING_USBD
 #define BSP_USING_ON_CHIP_FLASH
 

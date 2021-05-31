@@ -12,7 +12,10 @@
 #define AP_MAX_PASSWORD_LENGTH	64
 #define IP_MAX_LENGTH	16
 #define MAC_LENGTH		18
-#define MAX_DOMAIN_LENGTH	64
+#define MAX_DOMAIN_LENGTH	128
+#define MQTT_CLIENT_ID_MAX	192
+#define MQTT_USER_NAME_MAX	64
+#define MQTT_PASSWORD_MAX	64
 
 #pragma pack(push, 1)
 typedef struct _NetworkdCofig{
@@ -29,6 +32,11 @@ typedef struct _NetworkdCofig{
 	rt_uint8_t dhcpMode;
 	rt_uint8_t domainOn;
 	rt_uint8_t domainInfo[MAX_DOMAIN_LENGTH];
+	rt_uint8_t mqttOn;
+	rt_uint8_t mqttClientId[MQTT_CLIENT_ID_MAX];
+	rt_uint8_t mqttUserName[MQTT_USER_NAME_MAX];
+	rt_uint8_t mqttPassword[MQTT_PASSWORD_MAX];
+	rt_uint16_t mqttKeepAlive;
 }NetworkdCofig;
 typedef struct _config_tag {
 	rt_uint8_t waterMark;
@@ -48,8 +56,8 @@ rt_uint8_t *GetGatewayIP(void);
 void SetGatewayIP(rt_uint8_t *pData, rt_size_t dataSize);
 rt_uint8_t *GetDnsServer(void);
 void SetDnsServer(rt_uint8_t *pData, rt_size_t dataSize);
-rt_uint16_t GetTcpPort(void);
-void SetTcpPort(rt_uint16_t data);
+rt_uint16_t GetNetworkPort(void);
+void SetNetworkPort(rt_uint16_t data);
 rt_uint8_t *GetTcpIp(void);
 void SetTcpIP(rt_uint8_t *pData, rt_size_t dataSize);
 rt_uint8_t *GetApPassword(void);
@@ -68,6 +76,16 @@ rt_uint8_t GetDomainConfig(void);
 void SetDomainConfig(rt_uint8_t domainOn);
 rt_uint8_t *GetDomainInfo(void);
 void SetDomainInfo(rt_uint8_t *pData, rt_size_t dataSize);
+rt_uint8_t GetMqttOn(void);
+void SetMqttOn(rt_uint8_t mqttOn);
+rt_uint8_t *GetMqttClientId(void);
+void SetMqttClientId(rt_uint8_t *pData, rt_size_t dataSize);
+rt_uint8_t *GetMqttUserName(void);
+void SetMqttUserName(rt_uint8_t *pData, rt_size_t dataSize);
+rt_uint8_t *GetMqttPassword(void);
+void SetMqttPassword(rt_uint8_t *pData, rt_size_t dataSize);
+rt_uint16_t GetMqttKeepAlive(void);
+void SetMqttKeepAlive(rt_uint16_t mqttKeepAlive);
 void ShowConfig(void);
 rt_bool_t InitConfiguration(void);
 
