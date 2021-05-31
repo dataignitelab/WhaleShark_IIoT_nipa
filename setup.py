@@ -30,7 +30,7 @@ setup(
         'pyserial==3.4',
         'python-dateutil==2.8.1',
         'pytz==2020.1',
-        'PyYAML==5.3.1',
+        'PyYAML==5.4',
         'rabbitmq-admin==0.2',
         'redis==3.5.3',
         'requests==2.24.0',
