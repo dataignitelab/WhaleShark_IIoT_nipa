@@ -7,9 +7,25 @@ from datetime import datetime
 import pika
 
 from net_socket.signal_killer import GracefulInterruptHandler
+import logging
+import logging.handlers as handlers
 
-logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', stream=sys.stdout, level=logging.DEBUG,
-                    datefmt='%Y-%m-%d %H:%M:%S')
+logger = logging.getLogger('iiot_tcp_async')
+logger.setLevel(logging.DEBUG)
+
+## Here we define our formatter
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+logHandler = handlers.TimedRotatingFileHandler('iiot_tcp_async_debug.log', when='M', interval=1, backupCount=0)
+logHandler.setLevel(logging.DEBUG)
+logHandler.setFormatter(formatter)
+
+errorLogHandler = handlers.RotatingFileHandler('iiot_tcp_async_error.log', maxBytes=5000, backupCount=0)
+errorLogHandler.setLevel(logging.ERROR)
+errorLogHandler.setFormatter(formatter)
+
+logger.addHandler(logHandler)
+logger.addHandler(errorLogHandler)
 
 
 def init_facilities_info(redis_con):
@@ -275,7 +291,7 @@ class AsyncServer:
             return mqtt_con, json.loads(json_body)
         
         except Exception as e:
-            logging.exception(str(e))
+            logger.error(str(e))
             return {'Status': str(e)}
     
     def convert_hex2decimal(self, packet_bytes, host, port, mqtt_valid=True):
@@ -304,9 +320,9 @@ class AsyncServer:
                                                     }}
         try:
             byte_tuple = self.convert(list(packet_bytes))
-            logging.debug('byte message')
-            logging.debug('1[' + str(packet_bytes)+ ']')
-            logging.debug('2['+str(byte_tuple)+']')
+            logger.debug('byte message')
+            logger.debug('1[' + str(packet_bytes)+ ']')
+            logger.debug('2['+str(byte_tuple)+']')
             if byte_tuple[0] == 2 and (byte_tuple[16] == 3 or byte_tuple[18] == 3):
                 group = chr(byte_tuple[5]) + chr(byte_tuple[6])
                 group_code = int('0x{:02x}'.format(byte_tuple[7]) + '{:02x}'.format(byte_tuple[8]), 16)
@@ -344,8 +360,8 @@ class AsyncServer:
             else:
                 status = 'ER'
         except Exception as e:
-            logging.exception(str(e))
-        logging.debug(status + str(packet_bytes) + str(modbus_dict))
+            logger.error(str(e))
+        logger.debug(status + str(packet_bytes) + str(modbus_dict))
         return status, str(packet_bytes), modbus_dict
     
     async def get_client(self, event_manger, server_sock, msg_size, rabbit_channel, exchange_type):
@@ -383,7 +399,7 @@ class AsyncServer:
                         packet = (await event_manger.sock_recv(client, msg_size))
                     except Exception as e:
                         client.close()
-                        logging.debug('Client socket close by exception:' + str(e.args))
+                        logger.debug('Client socket close by exception:' + str(e.args))
                         h.release()
                         break
                     if packet:
@@ -411,23 +427,23 @@ class AsyncServer:
                                             logging.debug(
                                                 'mq body:' + str(json.dumps({equipment_id: fac_daq[equipment_id]})))
                                         else:
-                                            logging.exception("MQTT Publish Excetion:" + str(rtn_json))
+                                            logger.error("MQTT Publish Excetion:" + str(rtn_json))
                                             raise NameError('MQTT Publish exception')
                                     else:
                                         acq_message = status + packet + 'is not exist equipment_id key\r\n'
-                                        logging.debug(acq_message)
+                                        logger.debug(acq_message)
                                         client.sendall(acq_message.encode())
                                         continue
                                 else:
-                                    logging.debug('redis key facilities_info is None, key will be reset')
+                                    logger.debug('redis key facilities_info is None, key will be reset')
                                     init_facilities_info(self.redis_mgr)
 
                             acq_message = status + packet + '\r\n'
-                            logging.debug('rtn:' + acq_message)
+                            logger.debug('rtn:' + acq_message)
                             client.sendall(acq_message.encode())
                         except Exception as e:
                             client.sendall(packet.encode())
-                            logging.exception('message error:' + str(e))
+                            logger.error('message error:' + str(e))
                     else:
                         client.close()
                 else:

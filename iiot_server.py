@@ -8,8 +8,25 @@ import json
 import pika
 from net_socket.iiot_tcp_async_server import AsyncServer
 
-logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',stream=sys.stdout, level=logging.DEBUG, datefmt='%Y-%m-%d %H:%M:%S')
-logging.getLogger("pika").propagate = False
+import logging
+import logging.handlers as handlers
+
+logger = logging.getLogger('iiot_server')
+logger.setLevel(logging.DEBUG)
+
+## Here we define our formatter
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+logHandler = handlers.TimedRotatingFileHandler('iiot_server_debug.log', when='M', interval=1, backupCount=0)
+logHandler.setLevel(logging.DEBUG)
+logHandler.setFormatter(formatter)
+
+errorLogHandler = handlers.RotatingFileHandler('iiot_server_error.log', maxBytes=5000, backupCount=0)
+errorLogHandler.setLevel(logging.ERROR)
+errorLogHandler.setFormatter(formatter)
+
+logger.addHandler(logHandler)
+logger.addHandler(errorLogHandler)
 """
 grafana docker
 docker run -d -p 3000:3000 grafana/grafana
@@ -281,7 +298,7 @@ class TcpServer:
                 redis_con.set('facilities_info', json.dumps(facilities_dict))
 
         except Exception as e:
-            logging.error(str(e))
+            logger.error(str(e))
 
         return redis_con
 
@@ -300,19 +317,19 @@ class TcpServer:
             channel = connection.channel()
             channel.exchange_declare(exchange='facility', exchange_type=self.exchange_type)
         except Exception as e:
-            logging.exception(str(e))
+            logger.exception(str(e))
 
         return channel
 
     def init_config(self):
         self.redis_con = self.config_equip_desc(address=self.redis_host, port=self.redis_port)
         if self.redis_con is None:
-            logging.error('redis configuration fail')
+            logger.error('redis configuration fail')
             sys.exit()
 
         self.mq_channel = self.get_messagequeue(address=self.rabbitmq_host, port=self.rabbitmq_port)
         if self.mq_channel is None:
-            logging.error('rabbitmq configuration fail')
+            logger.error('rabbitmq configuration fail')
             sys.exit()
 
     def get_redis_con(self):
@@ -345,4 +362,4 @@ if __name__ == '__main__':
             async_server.get_client(event_manger, server_socket, msg_size, rabbit_channel, server.exchange_type))
 
     except Exception as e:
-        print(str(e))
+        logger.error(str(e))
