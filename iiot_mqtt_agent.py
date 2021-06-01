@@ -344,7 +344,7 @@ class Agent:
         self.config_facility_desc(self.redis_mgr)
         facilities_dict = json.loads(self.redis_mgr.get('facilities_info'))
         for facility_id in facilities_dict.keys():
-            result = self.mq_channel.queue_declare(queue=facility_id, exclusive=True)
+            result = self.mq_channel.queue_declare(queue=facility_id)#, exclusive=True)
             tx_queue = result.method.queue
             logging.debug('Queue bind exchange: %s queue %s'%('facility', facility_id))
             self.mq_channel.queue_bind(exchange='facility', queue=tx_queue)
