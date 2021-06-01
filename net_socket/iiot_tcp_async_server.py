@@ -10,7 +10,9 @@ from net_socket.signal_killer import GracefulInterruptHandler
 import logging
 import logging.handlers as handlers
 
-logger = logging.getLogger('iiot_tcp_async')
+logger = logging.getLogger('log/iiot_tcp_async')
+FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
+logging.basicConfig(format=FORMAT)
 logger.setLevel(logging.DEBUG)
 
 ## Here we define our formatter
@@ -29,193 +31,192 @@ logger.addHandler(errorLogHandler)
 
 
 def init_facilities_info(redis_con):
-    facilities_dict = \
-        {
-            'TS0001':
-                {
-                    '0001': 'TS_VOLT1_(RS)',
-                    '0002': 'TS_VOLT1_(ST)',
-                    '0003': 'TS_VOLT1_(RT)',
-                    '0004': 'TS_AMP1_(R)',
-                    '0005': 'TS_AMP1_(S)',
-                    '0006': 'TS_AMP1_(T)',
-                    '0007': 'INNER_PRESS',
-                    '0008': 'PUMP_PRESS',
-                    '0009': 'TEMPERATURE1(PV)',
-                    '0010': 'TEMPERATURE1(SV)',
-                    '0011': 'OVER_TEMP',
-                    '0012': 'Nitrogen',
-                    '0013': 'Argon'
-                },
-            'TS0002':
-                {
-                    '0001': 'TS_VOLT1_(RS)',
-                    '0002': 'TS_VOLT1_(ST)',
-                    '0003': 'TS_VOLT1_(RT)',
-                    '0004': 'TS_AMP1_(R)',
-                    '0005': 'TS_AMP1_(S)',
-                    '0006': 'TS_AMP1_(T)',
-                    '0007': 'INNER_PRESS',
-                    '0008': 'PUMP_PRESS',
-                    '0009': 'TEMPERATURE1(PV)',
-                    '0010': 'TEMPERATURE1(SV)',
-                    '0011': 'OVER_TEMP',
-                    '0012': 'Nitrogen',
-                    '0013': 'Argon'
-                },
-            'TS0003':
-                {
-                    '0001': 'TS_VOLT1_(RS)',
-                    '0002': 'TS_VOLT1_(ST)',
-                    '0003': 'TS_VOLT1_(RT)',
-                    '0004': 'TS_AMP1_(R)',
-                    '0005': 'TS_AMP1_(S)',
-                    '0006': 'TS_AMP1_(T)',
-                    '0007': 'INNER_PRESS',
-                    '0008': 'PUMP_PRESS',
-                    '0009': 'TEMPERATURE1(PV)',
-                    '0010': 'TEMPERATURE1(SV)',
-                    '0011': 'OVER_TEMP',
-                    '0012': 'Nitrogen',
-                    '0013': 'Argon'
-                },
-            'TS0004':
-                {
-                    '0001': 'TS_VOLT1_(RS)',
-                    '0002': 'TS_VOLT1_(ST)',
-                    '0003': 'TS_VOLT1_(RT)',
-                    '0004': 'TS_AMP1_(R)',
-                    '0005': 'TS_AMP1_(S)',
-                    '0006': 'TS_AMP1_(T)',
-                    '0007': 'INNER_PRESS',
-                    '0008': 'PUMP_PRESS',
-                    '0009': 'TEMPERATURE1(PV)',
-                    '0010': 'TEMPERATURE1(SV)',
-                    '0011': 'OVER_TEMP',
-                    '0012': 'Nitrogen',
-                    '0013': 'Argon'
-                },
-            'TS0005':
-                {
-                    '0001': 'TS_VOLT1_(RS)',
-                    '0002': 'TS_VOLT1_(ST)',
-                    '0003': 'TS_VOLT1_(RT)',
-                    '0004': 'TS_AMP1_(R)',
-                    '0005': 'TS_AMP1_(S)',
-                    '0006': 'TS_AMP1_(T)',
-                    '0007': 'INNER_PRESS',
-                    '0008': 'PUMP_PRESS',
-                    '0009': 'TEMPERATURE1(PV)',
-                    '0010': 'TEMPERATURE1(SV)',
-                    '0011': 'OVER_TEMP',
-                    '0012': 'Nitrogen',
-                    '0013': 'Argon'
-                },
-                'TK0001':
-                    {
-                        '0001': 'TK_VOLT1_(RS)',
-                        '0002': 'TK_VOLT1_(ST)',
-                        '0003': 'TK_VOLT1_(RT)',
-                        '0004': 'TK_AMP1_(R)',
-                        '0005': 'TK_AMP1_(S)',
-                        '0006': 'TK_AMP1_(T)',
-                        '0007': 'TK_VOLT2_(RS)',
-                        '0008': 'TK_VOLT2_(ST)',
-                        '0009': 'TK_VOLT2_(RT)',
-                        '0010': 'TK_AMP2_(R)',
-                        '0011': 'TK_AMP2_(S)',
-                        '0012': 'TK_AMP2_(T)',
-                        '0013': 'INNER_PRESS',
-                        '0014': 'PUMP_PRESS',
-                        '0015': 'TEMPERATURE1(PV)',
-                        '0016': 'TEMPERATURE1(SV)',
-                        '0017': 'TEMPERATURE2(PV)',
-                        '0018': 'TEMPERATURE2(SV)',
-                        '0019': 'OVER_TEMP',
-                        '0020': 'INNER_PRESS2',
-                        '0021': 'PUMP_PRESS2',
-                        '0022': 'Nitrogen',
-                        '0023': 'Argon'
-                    },
-                'TK0002':
-                    {
-                        '0001': 'TK_VOLT1_(RS)',
-                        '0002': 'TK_VOLT1_(ST)',
-                        '0003': 'TK_VOLT1_(RT)',
-                        '0004': 'TK_AMP1_(R)',
-                        '0005': 'TK_AMP1_(S)',
-                        '0006': 'TK_AMP1_(T)',
-                        '0007': 'TK_VOLT2_(RS)',
-                        '0008': 'TK_VOLT2_(ST)',
-                        '0009': 'TK_VOLT2_(RT)',
-                        '0010': 'TK_AMP2_(R)',
-                        '0011': 'TK_AMP2_(S)',
-                        '0012': 'TK_AMP2_(T)',
-                        '0013': 'INNER_PRESS',
-                        '0014': 'PUMP_PRESS',
-                        '0015': 'TEMPERATURE1(PV)',
-                        '0016': 'TEMPERATURE1(SV)',
-                        '0017': 'TEMPERATURE2(PV)',
-                        '0018': 'TEMPERATURE2(SV)',
-                        '0019': 'OVER_TEMP',
-                        '0020': 'INNER_PRESS2',
-                        '0021': 'PUMP_PRESS2',
-                        '0022': 'Nitrogen',
-                        '0023': 'Argon'
-                    },
-                'TK0003':
-                    {
-                        '0001': 'TK_VOLT1_(RS)',
-                        '0002': 'TK_VOLT1_(ST)',
-                        '0003': 'TK_VOLT1_(RT)',
-                        '0004': 'TK_AMP1_(R)',
-                        '0005': 'TK_AMP1_(S)',
-                        '0006': 'TK_AMP1_(T)',
-                        '0007': 'TK_VOLT2_(RS)',
-                        '0008': 'TK_VOLT2_(ST)',
-                        '0009': 'TK_VOLT2_(RT)',
-                        '0010': 'TK_AMP2_(R)',
-                        '0011': 'TK_AMP2_(S)',
-                        '0012': 'TK_AMP2_(T)',
-                        '0013': 'INNER_PRESS',
-                        '0014': 'PUMP_PRESS',
-                        '0015': 'TEMPERATURE1(PV)',
-                        '0016': 'TEMPERATURE1(SV)',
-                        '0017': 'TEMPERATURE2(PV)',
-                        '0018': 'TEMPERATURE2(SV)',
-                        '0019': 'OVER_TEMP',
-                        '0020': 'INNER_PRESS2',
-                        '0021': 'PUMP_PRESS2',
-                        '0022': 'Nitrogen',
-                        '0023': 'Argon'
-                    },
-                'TK0004':
-                    {
-                        '0001': 'TK_VOLT1_(RS)',
-                        '0002': 'TK_VOLT1_(ST)',
-                        '0003': 'TK_VOLT1_(RT)',
-                        '0004': 'TK_AMP1_(R)',
-                        '0005': 'TK_AMP1_(S)',
-                        '0006': 'TK_AMP1_(T)',
-                        '0007': 'TK_VOLT2_(RS)',
-                        '0008': 'TK_VOLT2_(ST)',
-                        '0009': 'TK_VOLT2_(RT)',
-                        '0010': 'TK_AMP2_(R)',
-                        '0011': 'TK_AMP2_(S)',
-                        '0012': 'TK_AMP2_(T)',
-                        '0013': 'INNER_PRESS',
-                        '0014': 'PUMP_PRESS',
-                        '0015': 'TEMPERATURE1(PV)',
-                        '0016': 'TEMPERATURE1(SV)',
-                        '0017': 'TEMPERATURE2(PV)',
-                        '0018': 'TEMPERATURE2(SV)',
-                        '0019': 'OVER_TEMP',
-                        '0020': 'INNER_PRESS2',
-                        '0021': 'PUMP_PRESS2',
-                        '0022': 'Nitrogen',
-                        '0023': 'Argon'
-                    }
-        }
+    facilities_dict = {
+        'TS0001':
+            {
+                '0001': 'VOLT1_(RS)',
+                '0002': 'VOLT1_(ST)',
+                '0003': 'VOLT1_(RT)',
+                '0004': 'AMP1_(R)',
+                '0005': 'AMP1_(S)',
+                '0006': 'AMP1_(T)',
+                '0007': 'INNER_PRESS',
+                '0008': 'PUMP_PRESS',
+                '0009': 'TEMPERATURE1(PV)',
+                '0010': 'TEMPERATURE1(SV)',
+                '0011': 'OVER_TEMP',
+                '0012': 'Nitrogen',
+                '0013': 'Argon'
+            },
+        'TS0002':
+            {
+                '0001': 'VOLT1_(RS)',
+                '0002': 'VOLT1_(ST)',
+                '0003': 'VOLT1_(RT)',
+                '0004': 'AMP1_(R)',
+                '0005': 'AMP1_(S)',
+                '0006': 'AMP1_(T)',
+                '0007': 'INNER_PRESS',
+                '0008': 'PUMP_PRESS',
+                '0009': 'TEMPERATURE1(PV)',
+                '0010': 'TEMPERATURE1(SV)',
+                '0011': 'OVER_TEMP',
+                '0012': 'Nitrogen',
+                '0013': 'Argon'
+            },
+        'TS0003':
+            {
+                '0001': 'VOLT1_(RS)',
+                '0002': 'VOLT1_(ST)',
+                '0003': 'VOLT1_(RT)',
+                '0004': 'AMP1_(R)',
+                '0005': 'AMP1_(S)',
+                '0006': 'AMP1_(T)',
+                '0007': 'INNER_PRESS',
+                '0008': 'PUMP_PRESS',
+                '0009': 'TEMPERATURE1(PV)',
+                '0010': 'TEMPERATURE1(SV)',
+                '0011': 'OVER_TEMP',
+                '0012': 'Nitrogen',
+                '0013': 'Argon'
+            },
+        'TS0004':
+            {
+                '0001': 'VOLT1_(RS)',
+                '0002': 'VOLT1_(ST)',
+                '0003': 'VOLT1_(RT)',
+                '0004': 'AMP1_(R)',
+                '0005': 'AMP1_(S)',
+                '0006': 'AMP1_(T)',
+                '0007': 'INNER_PRESS',
+                '0008': 'PUMP_PRESS',
+                '0009': 'TEMPERATURE1(PV)',
+                '0010': 'TEMPERATURE1(SV)',
+                '0011': 'OVER_TEMP',
+                '0012': 'Nitrogen',
+                '0013': 'Argon'
+            },
+        'TS0005':
+            {
+                '0001': 'VOLT1_(RS)',
+                '0002': 'VOLT1_(ST)',
+                '0003': 'VOLT1_(RT)',
+                '0004': 'AMP1_(R)',
+                '0005': 'AMP1_(S)',
+                '0006': 'AMP1_(T)',
+                '0007': 'INNER_PRESS',
+                '0008': 'PUMP_PRESS',
+                '0009': 'TEMPERATURE1(PV)',
+                '0010': 'TEMPERATURE1(SV)',
+                '0011': 'OVER_TEMP',
+                '0012': 'Nitrogen',
+                '0013': 'Argon'
+            },
+        'TK0001':
+            {
+                '0001': 'VOLT1_(RS)',
+                '0002': 'VOLT1_(ST)',
+                '0003': 'VOLT1_(RT)',
+                '0004': 'AMP1_(R)',
+                '0005': 'AMP1_(S)',
+                '0006': 'AMP1_(T)',
+                '0007': 'VOLT2_(RS)',
+                '0008': 'VOLT2_(ST)',
+                '0009': 'VOLT2_(RT)',
+                '0010': 'AMP2_(R)',
+                '0011': 'AMP2_(S)',
+                '0012': 'AMP2_(T)',
+                '0013': 'INNER_PRESS',
+                '0014': 'PUMP_PRESS',
+                '0015': 'TEMPERATURE1(PV)',
+                '0016': 'TEMPERATURE1(SV)',
+                '0017': 'TEMPERATURE2(PV)',
+                '0018': 'TEMPERATURE2(SV)',
+                '0019': 'OVER_TEMP',
+                '0020': 'INNER_PRESS2',
+                '0021': 'PUMP_PRESS2',
+                '0022': 'Nitrogen',
+                '0023': 'Argon'
+            },
+        'TK0002':
+            {
+                '0001': 'VOLT1_(RS)',
+                '0002': 'VOLT1_(ST)',
+                '0003': 'VOLT1_(RT)',
+                '0004': 'AMP1_(R)',
+                '0005': 'AMP1_(S)',
+                '0006': 'AMP1_(T)',
+                '0007': 'VOLT2_(RS)',
+                '0008': 'VOLT2_(ST)',
+                '0009': 'VOLT2_(RT)',
+                '0010': 'AMP2_(R)',
+                '0011': 'AMP2_(S)',
+                '0012': 'AMP2_(T)',
+                '0013': 'INNER_PRESS',
+                '0014': 'PUMP_PRESS',
+                '0015': 'TEMPERATURE1(PV)',
+                '0016': 'TEMPERATURE1(SV)',
+                '0017': 'TEMPERATURE2(PV)',
+                '0018': 'TEMPERATURE2(SV)',
+                '0019': 'OVER_TEMP',
+                '0020': 'INNER_PRESS2',
+                '0021': 'PUMP_PRESS2',
+                '0022': 'Nitrogen',
+                '0023': 'Argon'
+            },
+        'TK0003':
+            {
+                '0001': 'VOLT1_(RS)',
+                '0002': 'VOLT1_(ST)',
+                '0003': 'VOLT1_(RT)',
+                '0004': 'AMP1_(R)',
+                '0005': 'AMP1_(S)',
+                '0006': 'AMP1_(T)',
+                '0007': 'VOLT2_(RS)',
+                '0008': 'VOLT2_(ST)',
+                '0009': 'VOLT2_(RT)',
+                '0010': 'AMP2_(R)',
+                '0011': 'AMP2_(S)',
+                '0012': 'AMP2_(T)',
+                '0013': 'INNER_PRESS',
+                '0014': 'PUMP_PRESS',
+                '0015': 'TEMPERATURE1(PV)',
+                '0016': 'TEMPERATURE1(SV)',
+                '0017': 'TEMPERATURE2(PV)',
+                '0018': 'TEMPERATURE2(SV)',
+                '0019': 'OVER_TEMP',
+                '0020': 'INNER_PRESS2',
+                '0021': 'PUMP_PRESS2',
+                '0022': 'Nitrogen',
+                '0023': 'Argon'
+            },
+        'TK0004':
+            {
+                '0001': 'VOLT1_(RS)',
+                '0002': 'VOLT1_(ST)',
+                '0003': 'VOLT1_(RT)',
+                '0004': 'AMP1_(R)',
+                '0005': 'AMP1_(S)',
+                '0006': 'AMP1_(T)',
+                '0007': 'VOLT2_(RS)',
+                '0008': 'VOLT2_(ST)',
+                '0009': 'VOLT2_(RT)',
+                '0010': 'AMP2_(R)',
+                '0011': 'AMP2_(S)',
+                '0012': 'AMP2_(T)',
+                '0013': 'INNER_PRESS',
+                '0014': 'PUMP_PRESS',
+                '0015': 'TEMPERATURE1(PV)',
+                '0016': 'TEMPERATURE1(SV)',
+                '0017': 'TEMPERATURE2(PV)',
+                '0018': 'TEMPERATURE2(SV)',
+                '0019': 'OVER_TEMP',
+                '0020': 'INNER_PRESS2',
+                '0021': 'PUMP_PRESS2',
+                '0022': 'Nitrogen',
+                '0023': 'Argon'
+            }
+    }
     redis_con.set('facilities_info', json.dumps(facilities_dict))
 
 fac_daq = dict()

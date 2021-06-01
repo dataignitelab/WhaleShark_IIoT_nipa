@@ -8,9 +8,27 @@ from influxdb import InfluxDBClient
 import time
 # import mongo_manager
 
-logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
-                    stream=sys.stdout, level=logging.DEBUG, datefmt='%Y-%m-%d %H:%M:%S')
-logging.getLogger("pika").propagate = False
+import logging
+import logging.handlers as handlers
+
+logger = logging.getLogger('log/iiot_mqtt_agent')
+FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
+logging.basicConfig(format=FORMAT)
+logger.setLevel(logging.DEBUG)
+
+## Here we define our formatter
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+logHandler = handlers.TimedRotatingFileHandler('iiot_server_debug.log', when='M', interval=1, backupCount=0)
+logHandler.setLevel(logging.DEBUG)
+logHandler.setFormatter(formatter)
+
+errorLogHandler = handlers.RotatingFileHandler('iiot_server_error.log', maxBytes=5000, backupCount=0)
+errorLogHandler.setLevel(logging.ERROR)
+errorLogHandler.setFormatter(formatter)
+
+logger.addHandler(logHandler)
+logger.addHandler(errorLogHandler)
 
 class Agent:
     def __init__(self):
@@ -54,7 +72,7 @@ class Agent:
             }
             redis_obj = redis.StrictRedis(**conn_params)
         except Exception as exp:
-            logging.error(str(exp))
+            logger.error(str(exp))
         return redis_obj
 
     def get_influxdb(self, host, port, name, pwd, db):
@@ -70,7 +88,7 @@ class Agent:
         try:
             client = InfluxDBClient(host=host, port=port, username=name, password=pwd, database=db)
         except Exception as exp:
-            logging.error(str(exp))
+            logger.error(str(exp))
         return client
 
     def get_messagequeue(self, address, port):
@@ -93,7 +111,7 @@ class Agent:
             channel = connection.channel()
     
         except Exception as exp:
-            logging.exception(str(exp))
+            logger.exception(str(exp))
     
         return channel
 
@@ -129,11 +147,11 @@ class Agent:
                 else:
                     logging.debug('influx write faile:' + str(influx_json))
             except Exception as exp:
-                print(str(exp))
+                logger.error(str(exp))
 
         except Exception as e:
-            logging.exception('callback_mqreceive exception')
-            logging.exception(str(e))
+            logger.error('callback_mqreceive exception')
+            logger.error(str(e))
 
     def config_facility_desc(self, redis_con):
         facilities_dict = redis_con.get('facilities_info')
@@ -141,12 +159,12 @@ class Agent:
             facilities_dict = {
                 'TS0001':
                     {
-                        '0001': 'TS_VOLT1_(RS)',
-                        '0002': 'TS_VOLT1_(ST)',
-                        '0003': 'TS_VOLT1_(RT)',
-                        '0004': 'TS_AMP1_(R)',
-                        '0005': 'TS_AMP1_(S)',
-                        '0006': 'TS_AMP1_(T)',
+                        '0001': 'VOLT1_(RS)',
+                        '0002': 'VOLT1_(ST)',
+                        '0003': 'VOLT1_(RT)',
+                        '0004': 'AMP1_(R)',
+                        '0005': 'AMP1_(S)',
+                        '0006': 'AMP1_(T)',
                         '0007': 'INNER_PRESS',
                         '0008': 'PUMP_PRESS',
                         '0009': 'TEMPERATURE1(PV)',
@@ -157,12 +175,12 @@ class Agent:
                     },
                 'TS0002':
                     {
-                        '0001': 'TS_VOLT1_(RS)',
-                        '0002': 'TS_VOLT1_(ST)',
-                        '0003': 'TS_VOLT1_(RT)',
-                        '0004': 'TS_AMP1_(R)',
-                        '0005': 'TS_AMP1_(S)',
-                        '0006': 'TS_AMP1_(T)',
+                        '0001': 'VOLT1_(RS)',
+                        '0002': 'VOLT1_(ST)',
+                        '0003': 'VOLT1_(RT)',
+                        '0004': 'AMP1_(R)',
+                        '0005': 'AMP1_(S)',
+                        '0006': 'AMP1_(T)',
                         '0007': 'INNER_PRESS',
                         '0008': 'PUMP_PRESS',
                         '0009': 'TEMPERATURE1(PV)',
@@ -173,12 +191,12 @@ class Agent:
                     },
                 'TS0003':
                     {
-                        '0001': 'TS_VOLT1_(RS)',
-                        '0002': 'TS_VOLT1_(ST)',
-                        '0003': 'TS_VOLT1_(RT)',
-                        '0004': 'TS_AMP1_(R)',
-                        '0005': 'TS_AMP1_(S)',
-                        '0006': 'TS_AMP1_(T)',
+                        '0001': 'VOLT1_(RS)',
+                        '0002': 'VOLT1_(ST)',
+                        '0003': 'VOLT1_(RT)',
+                        '0004': 'AMP1_(R)',
+                        '0005': 'AMP1_(S)',
+                        '0006': 'AMP1_(T)',
                         '0007': 'INNER_PRESS',
                         '0008': 'PUMP_PRESS',
                         '0009': 'TEMPERATURE1(PV)',
@@ -189,12 +207,12 @@ class Agent:
                     },
                 'TS0004':
                     {
-                        '0001': 'TS_VOLT1_(RS)',
-                        '0002': 'TS_VOLT1_(ST)',
-                        '0003': 'TS_VOLT1_(RT)',
-                        '0004': 'TS_AMP1_(R)',
-                        '0005': 'TS_AMP1_(S)',
-                        '0006': 'TS_AMP1_(T)',
+                        '0001': 'VOLT1_(RS)',
+                        '0002': 'VOLT1_(ST)',
+                        '0003': 'VOLT1_(RT)',
+                        '0004': 'AMP1_(R)',
+                        '0005': 'AMP1_(S)',
+                        '0006': 'AMP1_(T)',
                         '0007': 'INNER_PRESS',
                         '0008': 'PUMP_PRESS',
                         '0009': 'TEMPERATURE1(PV)',
@@ -205,12 +223,12 @@ class Agent:
                     },
                 'TS0005':
                     {
-                        '0001': 'TS_VOLT1_(RS)',
-                        '0002': 'TS_VOLT1_(ST)',
-                        '0003': 'TS_VOLT1_(RT)',
-                        '0004': 'TS_AMP1_(R)',
-                        '0005': 'TS_AMP1_(S)',
-                        '0006': 'TS_AMP1_(T)',
+                        '0001': 'VOLT1_(RS)',
+                        '0002': 'VOLT1_(ST)',
+                        '0003': 'VOLT1_(RT)',
+                        '0004': 'AMP1_(R)',
+                        '0005': 'AMP1_(S)',
+                        '0006': 'AMP1_(T)',
                         '0007': 'INNER_PRESS',
                         '0008': 'PUMP_PRESS',
                         '0009': 'TEMPERATURE1(PV)',
@@ -221,18 +239,18 @@ class Agent:
                     },
                 'TK0001':
                     {
-                        '0001': 'TK_VOLT1_(RS)',
-                        '0002': 'TK_VOLT1_(ST)',
-                        '0003': 'TK_VOLT1_(RT)',
-                        '0004': 'TK_AMP1_(R)',
-                        '0005': 'TK_AMP1_(S)',
-                        '0006': 'TK_AMP1_(T)',
-                        '0007': 'TK_VOLT2_(RS)',
-                        '0008': 'TK_VOLT2_(ST)',
-                        '0009': 'TK_VOLT2_(RT)',
-                        '0010': 'TK_AMP2_(R)',
-                        '0011': 'TK_AMP2_(S)',
-                        '0012': 'TK_AMP2_(T)',
+                        '0001': 'VOLT1_(RS)',
+                        '0002': 'VOLT1_(ST)',
+                        '0003': 'VOLT1_(RT)',
+                        '0004': 'AMP1_(R)',
+                        '0005': 'AMP1_(S)',
+                        '0006': 'AMP1_(T)',
+                        '0007': 'VOLT2_(RS)',
+                        '0008': 'VOLT2_(ST)',
+                        '0009': 'VOLT2_(RT)',
+                        '0010': 'AMP2_(R)',
+                        '0011': 'AMP2_(S)',
+                        '0012': 'AMP2_(T)',
                         '0013': 'INNER_PRESS',
                         '0014': 'PUMP_PRESS',
                         '0015': 'TEMPERATURE1(PV)',
@@ -247,18 +265,18 @@ class Agent:
                     },
                 'TK0002':
                     {
-                        '0001': 'TK_VOLT1_(RS)',
-                        '0002': 'TK_VOLT1_(ST)',
-                        '0003': 'TK_VOLT1_(RT)',
-                        '0004': 'TK_AMP1_(R)',
-                        '0005': 'TK_AMP1_(S)',
-                        '0006': 'TK_AMP1_(T)',
-                        '0007': 'TK_VOLT2_(RS)',
-                        '0008': 'TK_VOLT2_(ST)',
-                        '0009': 'TK_VOLT2_(RT)',
-                        '0010': 'TK_AMP2_(R)',
-                        '0011': 'TK_AMP2_(S)',
-                        '0012': 'TK_AMP2_(T)',
+                        '0001': 'VOLT1_(RS)',
+                        '0002': 'VOLT1_(ST)',
+                        '0003': 'VOLT1_(RT)',
+                        '0004': 'AMP1_(R)',
+                        '0005': 'AMP1_(S)',
+                        '0006': 'AMP1_(T)',
+                        '0007': 'VOLT2_(RS)',
+                        '0008': 'VOLT2_(ST)',
+                        '0009': 'VOLT2_(RT)',
+                        '0010': 'AMP2_(R)',
+                        '0011': 'AMP2_(S)',
+                        '0012': 'AMP2_(T)',
                         '0013': 'INNER_PRESS',
                         '0014': 'PUMP_PRESS',
                         '0015': 'TEMPERATURE1(PV)',
@@ -273,18 +291,18 @@ class Agent:
                     },
                 'TK0003':
                     {
-                        '0001': 'TK_VOLT1_(RS)',
-                        '0002': 'TK_VOLT1_(ST)',
-                        '0003': 'TK_VOLT1_(RT)',
-                        '0004': 'TK_AMP1_(R)',
-                        '0005': 'TK_AMP1_(S)',
-                        '0006': 'TK_AMP1_(T)',
-                        '0007': 'TK_VOLT2_(RS)',
-                        '0008': 'TK_VOLT2_(ST)',
-                        '0009': 'TK_VOLT2_(RT)',
-                        '0010': 'TK_AMP2_(R)',
-                        '0011': 'TK_AMP2_(S)',
-                        '0012': 'TK_AMP2_(T)',
+                        '0001': 'VOLT1_(RS)',
+                        '0002': 'VOLT1_(ST)',
+                        '0003': 'VOLT1_(RT)',
+                        '0004': 'AMP1_(R)',
+                        '0005': 'AMP1_(S)',
+                        '0006': 'AMP1_(T)',
+                        '0007': 'VOLT2_(RS)',
+                        '0008': 'VOLT2_(ST)',
+                        '0009': 'VOLT2_(RT)',
+                        '0010': 'AMP2_(R)',
+                        '0011': 'AMP2_(S)',
+                        '0012': 'AMP2_(T)',
                         '0013': 'INNER_PRESS',
                         '0014': 'PUMP_PRESS',
                         '0015': 'TEMPERATURE1(PV)',
@@ -299,18 +317,18 @@ class Agent:
                     },
                 'TK0004':
                     {
-                        '0001': 'TK_VOLT1_(RS)',
-                        '0002': 'TK_VOLT1_(ST)',
-                        '0003': 'TK_VOLT1_(RT)',
-                        '0004': 'TK_AMP1_(R)',
-                        '0005': 'TK_AMP1_(S)',
-                        '0006': 'TK_AMP1_(T)',
-                        '0007': 'TK_VOLT2_(RS)',
-                        '0008': 'TK_VOLT2_(ST)',
-                        '0009': 'TK_VOLT2_(RT)',
-                        '0010': 'TK_AMP2_(R)',
-                        '0011': 'TK_AMP2_(S)',
-                        '0012': 'TK_AMP2_(T)',
+                        '0001': 'VOLT1_(RS)',
+                        '0002': 'VOLT1_(ST)',
+                        '0003': 'VOLT1_(RT)',
+                        '0004': 'AMP1_(R)',
+                        '0005': 'AMP1_(S)',
+                        '0006': 'AMP1_(T)',
+                        '0007': 'VOLT2_(RS)',
+                        '0008': 'VOLT2_(ST)',
+                        '0009': 'VOLT2_(RT)',
+                        '0010': 'AMP2_(R)',
+                        '0011': 'AMP2_(S)',
+                        '0012': 'AMP2_(T)',
                         '0013': 'INNER_PRESS',
                         '0014': 'PUMP_PRESS',
                         '0015': 'TEMPERATURE1(PV)',
@@ -352,7 +370,7 @@ class Agent:
             try:
                 self.mq_channel.basic_consume(tx_queue, on_message_callback=self.callback_mqreceive, auto_ack=True)
             except Exception as exp:
-                logging.error(str(exp))
+                logger.error(str(exp))
 
         self.mq_channel.start_consuming()
         
