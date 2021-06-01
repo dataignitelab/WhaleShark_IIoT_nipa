@@ -10,7 +10,7 @@ from net_socket.signal_killer import GracefulInterruptHandler
 import logging
 import logging.handlers as handlers
 
-logger = logging.getLogger('log/iiot_tcp_async')
+logger = logging.getLogger('iiot_tcp_async')
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
 logging.basicConfig(format=FORMAT)
 logger.setLevel(logging.DEBUG)
@@ -18,11 +18,11 @@ logger.setLevel(logging.DEBUG)
 ## Here we define our formatter
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-logHandler = handlers.TimedRotatingFileHandler('iiot_tcp_async_debug.log', when='M', interval=1, backupCount=0)
+logHandler = handlers.TimedRotatingFileHandler('log/iiot_tcp_async_debug.log', when='M', interval=1, backupCount=0)
 logHandler.setLevel(logging.DEBUG)
 logHandler.setFormatter(formatter)
 
-errorLogHandler = handlers.RotatingFileHandler('iiot_tcp_async_error.log', maxBytes=5000, backupCount=0)
+errorLogHandler = handlers.RotatingFileHandler('log/iiot_tcp_async_error.log', maxBytes=5000, backupCount=0)
 errorLogHandler.setLevel(logging.ERROR)
 errorLogHandler.setFormatter(formatter)
 
