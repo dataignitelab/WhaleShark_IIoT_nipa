@@ -19,11 +19,11 @@ logger.setLevel(logging.DEBUG)
 ## Here we define our formatter
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-logHandler = handlers.TimedRotatingFileHandler('log/iiot_mqtt_agent.log', when='M', interval=1, backupCount=0)
+logHandler = handlers.TimedRotatingFileHandler('log/iiot_mqtt_agent_debug.log', when='M', interval=1, backupCount=0)
 logHandler.setLevel(logging.DEBUG)
 logHandler.setFormatter(formatter)
 
-errorLogHandler = handlers.RotatingFileHandler('log/iiot_mqtt_agent.log', maxBytes=5000, backupCount=0)
+errorLogHandler = handlers.RotatingFileHandler('log/iiot_mqtt_agent_error.log', maxBytes=5000, backupCount=0)
 errorLogHandler.setLevel(logging.ERROR)
 errorLogHandler.setFormatter(formatter)
 
