@@ -19,7 +19,7 @@ logger = logging.getLogger('iiot_tcp_async')
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)s - %(funcName)20s() %(message)s')
 
 # logHandler = handlers.TimedRotatingFileHandler('log/iiot_tcp_async_debug.log', when='M', interval=1, backupCount=0)
-logHandler = handlers.RotatingFileHandler('log/iiot_tcp_async_debug.log', when='M', interval=1, backupCount=0)
+logHandler = handlers.RotatingFileHandler('log/iiot_tcp_async_debug.log', maxBytes=5000, backupCount=0)
 logHandler.setLevel(logging.DEBUG)
 logHandler.setFormatter(formatter)
 
