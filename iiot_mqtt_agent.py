@@ -39,7 +39,8 @@ class Agent:
        
             self.redis_host = config_obj['iiot_server']['redis_server']['ip_address']
             self.redis_port = config_obj['iiot_server']['redis_server']['port']
-        
+            self.redis_pwd = config_obj['iiot_server']['redis_server']['pwd']
+
             self.influx_host = config_obj['iiot_server']['influxdb']['ip_address']
             self.influx_port = config_obj['iiot_server']['influxdb']['port']
         
@@ -49,7 +50,7 @@ class Agent:
 
         # self.mongo_mgr = mongo_manager.MongoMgr()
     
-    def connect_redis(self, host, port):
+    def connect_redis(self, host, port, pwd):
         """
         Get connector for redis
         If you don't have redis, you can use redis on docker with follow steps.
@@ -69,6 +70,7 @@ class Agent:
             conn_params = {
                 "host": host,
                 "port": port,
+                "pwd": pwd
             }
             redis_obj = redis.StrictRedis(**conn_params)
         except Exception as exp:
@@ -156,6 +158,7 @@ class Agent:
     def config_facility_desc(self, redis_con):
         facilities_dict = redis_con.get('facilities_info')
         if facilities_dict is None:
+            logging.debug('Redis key is non->reset')
             facilities_dict = {
                 'TS0001':
                     {
@@ -353,7 +356,7 @@ class Agent:
         if self.mq_channel is None:
                 logging.error('rabbitmq configuration fail')
             
-        self.redis_mgr = self.connect_redis(self.redis_host, self.redis_port)
+        self.redis_mgr = self.connect_redis(self.redis_host, self.redis_port, self.redis_pwd)
     
     def get_influxdb_mgr(self):
         return self.influxdb_mgr

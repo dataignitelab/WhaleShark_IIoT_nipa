@@ -70,6 +70,7 @@ class TcpServer:
 
             self.redis_host = config_obj['iiot_server']['redis_server']['ip_address']
             self.redis_port = config_obj['iiot_server']['redis_server']['port']
+            self.redis_pwd = config_obj['iiot_server']['redis_server']['pwd']
 
             self.rabbitmq_host = config_obj['iiot_server']['rabbit_mq']['ip_address']
             self.rabbitmq_port = config_obj['iiot_server']['rabbit_mq']['port']
@@ -80,7 +81,7 @@ class TcpServer:
             self.exchange = config_obj['iiot_server']['rabbit_mq']['exchange']
             self.exchange_type = config_obj['iiot_server']['rabbit_mq']['exchange_type']
 
-    def connect_redis(self, host, port):
+    def connect_redis(self, host, port, pwd):
         '''
         :param host: redis access host ip
         :param port: redis access port
@@ -91,6 +92,7 @@ class TcpServer:
             conn_params = {
                 "host": host,
                 "port": port,
+                "pwd": pwd
             }
             redis_obj = redis.StrictRedis(**conn_params)
 
@@ -99,7 +101,7 @@ class TcpServer:
 
         return redis_obj
 
-    def config_equip_desc(self, address, port):
+    def config_equip_desc(self, address, port, pwd):
         '''
         Configure redis for equipment sensor desc(sensor_cd)
         key : const sensor_cd
@@ -108,9 +110,10 @@ class TcpServer:
         '''
         redis_con = None
         try:
-            redis_con = self.connect_redis(address, port)
+            redis_con = self.connect_redis(address, port, pwd)
             facilities_dict = redis_con.get('facilities_info')
             if facilities_dict is None:
+                logging.debug('Redis key is non->reset')
                 facilities_dict = {
                     'TS0001':
                         {
@@ -324,7 +327,7 @@ class TcpServer:
         return channel
 
     def init_config(self):
-        self.redis_con = self.config_equip_desc(address=self.redis_host, port=self.redis_port)
+        self.redis_con = self.config_equip_desc(address=self.redis_host, port=self.redis_port, pwd=self.redis_pwd)
         if self.redis_con is None:
             logger.error('redis configuration fail')
             sys.exit()

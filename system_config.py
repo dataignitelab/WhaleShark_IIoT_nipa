@@ -10,7 +10,6 @@ redis_con = server.get_redis_con()
 
 facilities_dict = redis_con.get('facilities_info')
 facilities_json = json.loads(facilities_dict)
-print(facilities_json)
 facilities_dict = {
                     'TS0001':
                         {
