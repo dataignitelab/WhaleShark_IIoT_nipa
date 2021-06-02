@@ -92,7 +92,8 @@ class TcpServer:
             conn_params = {
                 "host": host,
                 "port": port,
-                "pwd": pwd
+                'db': 0,
+                "password": pwd
             }
             redis_obj = redis.StrictRedis(**conn_params)
 

@@ -3,7 +3,7 @@ import json
 from iiot_server import TcpServer
 
 server = TcpServer()
-server.redis_con = server.config_equip_desc(address='localhost', port=6379)
+server.redis_con = server.config_equip_desc(address='localhost', port=6379, pwd='whaleshark')
 if server.redis_con is None:
     sys.exit()
 redis_con = server.get_redis_con()
