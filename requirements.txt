@@ -59,7 +59,7 @@ testpath==0.4.4
 toml==0.10.2
 tornado==6.1
 traitlets==5.0.5
-urllib3==1.25.11
+urllib3==1.26.5
 wcwidth==0.2.5
 webencodings==0.5.1
 certifi==2020.6.20
@@ -75,6 +75,6 @@ PyYAML==5.3.1
 redis==3.5.3
 requests==2.24.0
 six==1.15.0
-urllib3==1.25.11
+urllib3==1.26.5
 pytest==6.1.1
 
