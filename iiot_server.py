@@ -347,13 +347,16 @@ class TcpServer:
         return self.mq_channel
 
     def get_server_socket(self):
-        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_socket.setblocking(0)
-        server_socket.bind(('', self.tcp_port))
-        server_socket.listen(1)
-        logging.debug('IIoT Client Ready ({ip}:{port})'.format(ip=self.tcp_host, port=self.tcp_port))
-        self.redis_con.set('remote_log:iit_server_boot',json.dumps({'ip':self.tcp_host,'port':self.tcp_port, 'status':1}))
-        return server_socket
+        try:
+            server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            server_socket.setblocking(0)
+            server_socket.bind(('', self.tcp_port))
+            server_socket.listen(1)
+            logging.debug('IIoT Client Ready ({ip}:{port})'.format(ip=self.tcp_host, port=self.tcp_port))
+            self.redis_con.set('remote_log:iit_server_boot',json.dumps({'ip':self.tcp_host,'port':self.tcp_port, 'status':1}))
+            return server_socket
+        except Exception as e:
+            logger.error(str(e))
 
 
 if __name__ == '__main__':
