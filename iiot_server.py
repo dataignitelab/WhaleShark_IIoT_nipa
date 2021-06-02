@@ -12,12 +12,12 @@ import logging
 import logging.handlers as handlers
 
 logger = logging.getLogger('iiot_server')
-FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
-logging.basicConfig(format=FORMAT)
-logger.setLevel(logging.DEBUG)
+# FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
+# logging.basicConfig(format=FORMAT)
+# logger.setLevel(logging.DEBUG)
 
 ## Here we define our formatter
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)s - %(funcName)20s() %(message)s')
 
 logHandler = handlers.TimedRotatingFileHandler('log/iiot_server_debug.log', when='M', interval=1, backupCount=0)
 logHandler.setLevel(logging.DEBUG)

@@ -11,12 +11,12 @@ import logging
 import logging.handlers as handlers
 
 logger = logging.getLogger('iiot_tcp_async')
-FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
-logging.basicConfig(format=FORMAT)
-logger.setLevel(logging.DEBUG)
+# FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
+# logging.basicConfig(format=FORMAT)
+# logger.setLevel(logging.DEBUG)
 
 ## Here we define our formatter
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)s - %(funcName)20s() %(message)s')
 
 logHandler = handlers.TimedRotatingFileHandler('log/iiot_tcp_async_debug.log', when='M', interval=1, backupCount=0)
 logHandler.setLevel(logging.DEBUG)
@@ -400,7 +400,7 @@ class AsyncServer:
                         packet = (await event_manger.sock_recv(client, msg_size))
                     except Exception as e:
                         client.close()
-                        logger.debug('Client socket close by exception:' + str(e.args))
+                        logger.error('Client socket close by exception:' + str(e.args))
                         h.release()
                         break
                     if packet:
