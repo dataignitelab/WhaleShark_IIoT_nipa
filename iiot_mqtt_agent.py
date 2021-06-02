@@ -114,7 +114,7 @@ class Agent:
             channel = connection.channel()
     
         except Exception as exp:
-            logger.exception(str(exp))
+            logger.error(str(exp))
     
         return channel
 
@@ -129,16 +129,8 @@ class Agent:
             me_timestamp = time.time()
             for key in facility_msg_json[table_name].keys():
                 if key != 'pub_time':
-                    logging.debug('config key:' + key + 'value:' + str(facility_msg_json[table_name][key]))
                     fields[key] = float(facility_msg_json[table_name][key])
 
-            pub_time = facility_msg_json[table_name]['pub_time']
-            # day = pub_time.split(' ')[0]
-            # pub_doc = self.mongo_mgr.document_bykey('facility', table_name, {'DAY': day})
-            # if pub_doc is not None:
-            #     self.mongo_mgr.document_upsert('facility', table_name, day, pub_time, status='CHECK')
-            # else:
-            #     logging.debug('Mongo exception facility:'+table_name+':DAY'+ str(day)+' NO EXIST')
             fields['me_time'] = me_timestamp
             influx_json = [{
                 'measurement': table_name,
@@ -148,7 +140,7 @@ class Agent:
                 if self.influxdb_mgr.write_points(influx_json) is True:
                     logging.debug('influx write success:' + str(influx_json))
                 else:
-                    logging.debug('influx write faile:' + str(influx_json))
+                    logging.error('influx write faile:' + str(influx_json))
             except Exception as exp:
                 logger.error(str(exp))
 

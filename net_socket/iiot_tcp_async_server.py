@@ -440,7 +440,6 @@ class AsyncServer:
                                     init_facilities_info(self.redis_mgr)
 
                             acq_message = status + packet + '\r\n'
-                            logger.debug('rtn:' + acq_message)
                             client.sendall(acq_message.encode())
                         except Exception as e:
                             client.sendall(packet.encode())

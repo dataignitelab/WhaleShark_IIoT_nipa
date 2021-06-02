@@ -29,6 +29,7 @@ errorLogHandler.setFormatter(formatter)
 
 logger.addHandler(logHandler)
 logger.addHandler(errorLogHandler)
+
 """
 grafana docker
 docker run -d -p 3000:3000 grafana/grafana
@@ -323,7 +324,7 @@ class TcpServer:
             channel = connection.channel()
             channel.exchange_declare(exchange='facility', exchange_type=self.exchange_type)
         except Exception as e:
-            logger.exception(str(e))
+            logger.error(str(e))
 
         return channel
 
@@ -356,6 +357,7 @@ class TcpServer:
 
 if __name__ == '__main__':
     try:
+        logger.debug('iiot_server active')
         server = TcpServer()
         server.init_config()
         redis_mgr = server.get_redis_con()
