@@ -400,18 +400,18 @@ class AsyncServer:
                         break
                     if packet:
                         try:
-                            logging.debug('try convert')
+                            logger.debug('try convert')
                             host, port = client.getpeername()
                             status, packet, modbus_udp = self.convert_hex2decimal(packet, host, port)
                             fac_daq = get_fac_inf(self.redis_mgr, modbus_udp)
                             if status == 'OK':
                                 equipment_id = modbus_udp['equipment_id']
-                                logging.debug('equipment_id:' + equipment_id)
+                                logger.debug('equipment_id:' + equipment_id)
                                 fi_dict = self.redis_mgr.get('facilities_info')
                                 if fi_dict is not None:
                                     redis_fac_info = json.loads(fi_dict)
                                     if equipment_id in redis_fac_info.keys():
-                                        logging.debug('config factory message')
+                                        logger.debug('config factory message')
                                         fac_msg = config_fac_msg(equipment_id, fac_daq, modbus_udp, redis_fac_info)
 
                                         rabbit_channel, rtn_json = self.publish_facility_msg(mqtt_con=rabbit_channel,
@@ -420,7 +420,7 @@ class AsyncServer:
                                                                                              json_body=fac_msg,
                                                                                              exchange_type=exchange_type)
                                         if rtn_json == json.loads(fac_msg):
-                                            logging.debug(
+                                            logger.debug(
                                                 'mq body:' + str(json.dumps({equipment_id: fac_daq[equipment_id]})))
                                         else:
                                             logger.error("MQTT Publish Excetion:" + str(rtn_json))
