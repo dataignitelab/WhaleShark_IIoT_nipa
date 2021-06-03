@@ -8,11 +8,12 @@ from influxdb import InfluxDBClient
 import time
 import logging
 from logging import handlers
+import os
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
 formatter = logging.Formatter('[%(asctime)s-%(name)s-%(levelname)s-%(filename)s:%(lineno)s-%(funcName)10s()]%(message)s')
-
+os.makedirs('log', exist_ok=True)
 logHandler = handlers.RotatingFileHandler('log/iiot_mqtt_agent_debug.log',  maxBytes=1, backupCount=0)
 logHandler.setLevel(logging.DEBUG)
 logHandler.setFormatter(formatter)
