@@ -1,4 +1,3 @@
-import logging
 import yaml
 import json
 import pika
@@ -133,9 +132,9 @@ class Agent:
             }]
             try:
                 if self.influxdb_mgr.write_points(influx_json) is True:
-                    logging.debug('influx write success:' + str(influx_json))
+                    logger.debug('influx write success:' + str(influx_json))
                 else:
-                    logging.error('influx write faile:' + str(influx_json))
+                    logger.error('influx write faile:' + str(influx_json))
             except Exception as exp:
                 logger.error(str(exp))
 
