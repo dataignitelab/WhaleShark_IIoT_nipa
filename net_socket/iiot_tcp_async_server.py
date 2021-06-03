@@ -395,6 +395,12 @@ class AsyncServer:
                         packet = (await event_manger.sock_recv(client, msg_size))
                     except Exception as e:
                         logger.error('Client socket close by exception:' + str(client.getpeername()) + ':' + str(e.args))
+                        try:
+                            host, port = client.getpeername()
+                            logger.error('Info client :'+ host + ' port :' + port)
+                        except Exception as e:
+                            logger.error('Bug: Could not resolve host, ip info,'+str(e))
+
                         client.close()
                         h.release()
                         break
