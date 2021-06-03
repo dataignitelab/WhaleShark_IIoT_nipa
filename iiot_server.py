@@ -343,7 +343,7 @@ class TcpServer:
     def get_server_socket(self):
         try:
             server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  #프로세스 강제 종료 후 제시작시 소켓 재사용 가능하도록
             server_socket.setblocking(0)
             server_socket.bind(('', self.tcp_port))
             server_socket.listen(1)
