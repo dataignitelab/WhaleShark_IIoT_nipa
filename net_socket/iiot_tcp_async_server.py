@@ -5,25 +5,19 @@ import json
 import time
 from datetime import datetime
 import pika
-
 from net_socket.signal_killer import GracefulInterruptHandler
 import logging
-import logging.handlers as handlers
+from logging import handlers
 
-logger = logging.getLogger('iiot_tcp_async')
-# FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
-# logging.basicConfig(format=FORMAT)
-# logger.setLevel(logging.DEBUG)
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
+formatter = logging.Formatter('[%(asctime)s-%(name)s-%(levelname)s-%(filename)s:%(lineno)s-%(funcName)10s()]%(message)s')
 
-## Here we define our formatter
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)s - %(funcName)20s() %(message)s')
-
-# logHandler = handlers.TimedRotatingFileHandler('log/iiot_tcp_async_debug.log', when='M', interval=1, backupCount=0)
-logHandler = handlers.RotatingFileHandler('log/iiot_tcp_async_debug.log', maxBytes=5000, backupCount=0)
+logHandler = handlers.RotatingFileHandler('log/iiot_tcp_async_debug.log', maxBytes=1, backupCount=0)
 logHandler.setLevel(logging.DEBUG)
 logHandler.setFormatter(formatter)
 
-errorLogHandler = handlers.RotatingFileHandler('log/iiot_tcp_async_error.log', maxBytes=5000, backupCount=0)
+errorLogHandler = handlers.RotatingFileHandler('log/iiot_tcp_async_error.log', maxBytes=1, backupCount=0)
 errorLogHandler.setLevel(logging.ERROR)
 errorLogHandler.setFormatter(formatter)
 
