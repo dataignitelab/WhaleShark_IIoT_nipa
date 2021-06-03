@@ -394,7 +394,7 @@ class AsyncServer:
                     try:
                         packet = (await event_manger.sock_recv(client, msg_size))
                     except Exception as e:
-                        logger.error('Client socket close by exception:' + str(client.getpeername) + ':' + str(e.args))
+                        logger.error('Client socket close by exception:' + str(client.getpeername()) + ':' + str(e.args))
                         client.close()
                         h.release()
                         break
