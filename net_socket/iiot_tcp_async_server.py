@@ -10,6 +10,7 @@ from net_socket.redis_init_info import init_facilities_info
 from net_socket.signal_killer import GracefulInterruptHandler
 import logging
 from logging import handlers
+from pyrabbit.api import Client
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -92,7 +93,10 @@ class AsyncServer:
                 mqtt_con = connection.channel()
                 try:
                     mqtt_con.queue_declare(queue=routing_key)
-                    mqtt_con.exchange_declare(exchange=exchange_name, exchange_type=exchange_type)
+                    cl = Client(self.rabbitmq_host + ':' + str(8080), self.rabbitmq_id, self.rabbitmq_pwd)
+                    queues = [q['name'] for q in cl.get_exchanges()]
+                    if self.exchange not in queues:
+                        mqtt_con.exchange_declare(exchange=exchange_name, exchange_type=exchange_type)
                 except Exception as e:
                     logging.exception(str(e))
 

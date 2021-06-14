@@ -8,7 +8,7 @@ import time
 import logging
 from logging import handlers
 import os
-
+from pyrabbit.api import Client
 from net_socket.redis_init_info import init_facilities_info
 
 logger = logging.getLogger(__name__)

@@ -9,7 +9,7 @@ import pika
 from net_socket.iiot_tcp_async_server import AsyncServer
 import logging
 from logging import handlers
-
+from pyrabbit.api import Client
 from net_socket.redis_init_info import init_facilities_info
 
 logger = logging.getLogger(__name__)
@@ -133,7 +133,11 @@ class TcpServer:
             param = pika.ConnectionParameters(address, port, '/', credentials)
             connection = pika.BlockingConnection(param)
             channel = connection.channel()
-            channel.exchange_declare(exchange='facility', exchange_type=self.exchange_type)
+
+            cl = Client(self.rabbitmq_host + ':' + str(8080), self.rabbitmq_id, self.rabbitmq_pwd)
+            queues = [q['name'] for q in cl.get_exchanges()]
+            if self.exchange not in queues:
+                channel.exchange_declare(exchange='facility', exchange_type=self.exchange_type)
         except Exception as e:
             logger.error(str(e))
 
