@@ -13,7 +13,7 @@ setup(
     install_requires=[
         'astroid==2.4.2',
         'asyncio==3.4.3',
-        'certifi==2020.6.20',
+        'certifi==2022.12.7',
         'chardet==3.0.4',
         'flake8==3.8.3',
         'httplib2==0.18.1',
